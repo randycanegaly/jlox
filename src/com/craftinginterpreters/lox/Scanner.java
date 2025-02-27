@@ -108,12 +108,12 @@ public class Scanner {
 			line++;
 			break;
 		
-		case '"': string(); break;
+		case '"': string(); break;//see a quote, it's a string, process it
 			
 		default:
 			if (isDigit(c)) {
 				number();
-			} else if (isAlpha(c)) {
+			} else if (isAlpha(c)) {//if we got to here then we saw nothing of the above and no digit, is it an alpha character?
 				identifier();
 			} else {
 				Lox.error(line, "Unexpected character.");
@@ -122,24 +122,24 @@ public class Scanner {
 		}
 	}
 	
-	private void identifier() {
-		while (isAlphaNumeric(peek())) advance();
+	private void identifier() {//c is an alpha character
+		while (isAlphaNumeric(peek())) advance();//advance as long as characters seen are alphas
 		
-		String text = source.substring(start, current);
-		TokenType type = keywords.get(text);
-		if (type == null) type = IDENTIFIER;
+		String text = source.substring(start, current);//build up a string of characters seen
+		TokenType type = keywords.get(text);//is the string seen in the map of keywords? If so, then we have a type for that keyword
+		if (type == null) type = IDENTIFIER;//string wasn't in the map, it's an identifier
 		addToken(type);
 	}
 	
-	private void number() {
-		while ( isDigit(peek())) advance();
+	private void number() {//c is a digit, current is at the character after the digit
+		while ( isDigit(peek())) advance();//look ahead 1 character, advance as long as that is a digit
 		
 		//look for fractional part
-		if (peek() == '.' && isDigit(peekNext())) {
+		if (peek() == '.' && isDigit(peekNext())) {//peek above saw not a digit. if it's a '.' and the one after that is a digit
 			//Consume the '.'
 			advance();
 			
-			while (isDigit(peek())) advance();
+			while (isDigit(peek())) advance();//do the move ahead while seeing digits again thing
 		}
 		
 		addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
@@ -147,7 +147,8 @@ public class Scanner {
 	
 	
 	private void string() {
-		while (peek() != '"' && !isAtEnd()) {
+		while (peek() != '"' && !isAtEnd()) {//we're in a string, keep looking ahead
+			//and advancing as long as no newline or ending quote
 			if (peek() == '\n') line++;
 			advance();
 		}
@@ -157,7 +158,8 @@ public class Scanner {
 			return;
 		}
 		
-		advance(); //The closing ".
+		advance(); //The closing ". if we got to here, have dropped out of the while loop
+		//with nothing odd happening so after the advance, current will be pointing to end quote of the string
 		
 		//Trim the surrounding quotes.
 		String value = source.substring(start + 1, current - 1);
