@@ -69,7 +69,8 @@ public class Scanner {
 		case '-': addToken(MINUS); break;
 		case '+': addToken(PLUS); break;
 		case ';': addToken(SEMICOLON); break;
-		case '*': addToken(STAR); break;
+		//case '*': addToken(STAR); break;
+		case '*' : star(); break;
 		
 		case '!':
 			addToken(match('=') ? BANG_EQUAL : BANG);//! can be a token or the start of a two character token,
@@ -164,6 +165,11 @@ public class Scanner {
 		//Trim the surrounding quotes.
 		String value = source.substring(start + 1, current - 1);
 		addToken(STRING, value);
+	}
+	
+	private void star() {
+		addToken(STAR);
+		/**/
 	}
 	
 	private boolean match(char expected) {
