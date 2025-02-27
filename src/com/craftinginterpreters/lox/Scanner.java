@@ -43,11 +43,12 @@ public class Scanner {
 	List<Token> scanTokens() {
 		while(!isAtEnd()) {
 			//We are at the beginning of the next lexeme
-			start = current;
-			scanToken();
+			start = current;//both start at 0, after each call to scanToken(), current points to the start of the next lexeme
+			scanToken();//scan token will call advance(), maybe more than once, depending on the token seen
+			//it will leave current at the start of the next lexeme
 		}
 		
-		tokens.add(new Token(EOF, "", null, line));
+		tokens.add(new Token(EOF, "", null, line));//add an end of token list indicator to the list
 		return tokens;
 	}
 	
@@ -55,6 +56,7 @@ public class Scanner {
 		return current >= source.length();
 	}
 	
+	//big switch, figure out what token is seen, added to the tokens List
 	private void scanToken() {
 		char c = advance();
 		switch (c) {
@@ -70,7 +72,10 @@ public class Scanner {
 		case '*': addToken(STAR); break;
 		
 		case '!':
-			addToken(match('=') ? BANG_EQUAL : BANG);
+			addToken(match('=') ? BANG_EQUAL : BANG);//! can be a token or the start of a two character token,
+			//advance would have grabbed the character at current and then incremented current by 1
+			//so by the time we are here, c = '!' and current points to the next character. 
+			//see if that next character matches what is needed for the two character token
 			break;
 		case '=':
 			addToken(match('=') ? EQUAL_EQUAL : EQUAL);
@@ -81,12 +86,15 @@ public class Scanner {
 		case '>':
 			addToken(match('=') ? GREATER_EQUAL : GREATER);
 			break;
-		case '/':
-			if (match('/')) {
+		case '/'://is this divide or the start of a comment??
+			if (match('/')) {//do the match() thing to see if we have '//'
 				//A comment goes until the end of the line
-				while (peek() != '\n' && !isAtEnd()) advance();
+				//here, c = '/', current is at the character after c
+				//match is going to increment current again so that current is at the character after '//'
+				//peek just looks at what current points to, doesn't increment current
+				while (peek() != '\n' && !isAtEnd()) advance();//we know we are in a comment. look, newline? if no, advance() and peek again
 			} else {
-				addToken(SLASH);
+				addToken(SLASH);//the character after '/' is not '/' so this is just divide
 			}
 			break;
 			

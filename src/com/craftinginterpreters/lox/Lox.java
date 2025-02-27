@@ -15,9 +15,9 @@ public class Lox {
 			System.out.println("Usage: jlox [script]");
 			System.exit(64);
 		} else if (args.length == 1){
-			runFile(args[0]);
+			runFile(args[0]);//when given one argument the interpreter will process a source code file
 		} else {
-			runPrompt();
+			runPrompt();//when given no arguments the interpreter acts as a REPL
 		}
 	}
 
