@@ -43,7 +43,7 @@ public class Lox {
 	}
 	 
 	private static void run(String source) {
-		Scanner scanner = new Scanner.scanTokens();
+		Scanner scanner = new Scanner(source);
 		List<Token> tokens = scanner.scanTokens();
 				 
 		for (Token token : tokens) {
@@ -51,7 +51,11 @@ public class Lox {
 		}
 	}
 	
-	static void error(int line, String where, String message) {
+	static void error(int line, String message) {
+		report(line, "", message);
+	}
+	
+	static void report(int line, String where, String message) {
 		System.err.println("[line " + line + "] Error" + where + ": " + message);
 		hadError = true;
 	}
