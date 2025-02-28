@@ -69,8 +69,7 @@ public class Scanner {
 		case '-': addToken(MINUS); break;
 		case '+': addToken(PLUS); break;
 		case ';': addToken(SEMICOLON); break;
-		//case '*': addToken(STAR); break;
-		case '*' : star(); break;
+		case '*': addToken(STAR); break;
 		
 		case '!':
 			addToken(match('=') ? BANG_EQUAL : BANG);//! can be a token or the start of a two character token,
@@ -87,13 +86,19 @@ public class Scanner {
 		case '>':
 			addToken(match('=') ? GREATER_EQUAL : GREATER);
 			break;
+			
 		case '/'://is this divide or the start of a comment??
-			if (match('/')) {//do the match() thing to see if we have '//'
-				//A comment goes until the end of the line
-				//here, c = '/', current is at the character after c
-				//match is going to increment current again so that current is at the character after '//'
-				//peek just looks at what current points to, doesn't increment current
-				while (peek() != '\n' && !isAtEnd()) advance();//we know we are in a comment. look, newline? if no, advance() and peek again
+			if (match('/')) {
+				while (peek() != '\n' && !isAtEnd()) advance();//covers //comment
+			} else if (match('*')) {//covers /*comment*/
+				while (peek() != '*' && !isAtEnd()) {
+					if (peek() == '\n') line++;
+					advance();
+				}//dropped out of loop, so either character at current is '*' or we are at end of source
+				if (peekNext() == '/') {
+					advance();
+					advance();
+				}
 			} else {
 				addToken(SLASH);//the character after '/' is not '/' so this is just divide
 			}
@@ -165,11 +170,6 @@ public class Scanner {
 		//Trim the surrounding quotes.
 		String value = source.substring(start + 1, current - 1);
 		addToken(STRING, value);
-	}
-	
-	private void star() {
-		addToken(STAR);
-		/**/
 	}
 	
 	private boolean match(char expected) {
