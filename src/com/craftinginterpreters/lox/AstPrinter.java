@@ -40,13 +40,19 @@ public class AstPrinter implements Expr.Visitor<String> {
 		return builder.toString();
 	}
 	
+	
+	/*
+	 * (* (- 123) (group 45.67))
+	 */
+	
+	
 	public static void main(String[] args) {
-		Expr expression = new Expr.Binary(
-			new Expr.Unary(
+		Expr expression = new Expr.Binary(//binary expression: left, operator, right
+			new Expr.Unary(//this is left for binary
 					new Token(TokenType.MINUS, "-", null, 1),
 					new Expr.Literal(123)),
-			new Token(TokenType.STAR, "*", null, 1),
-			new Expr.Grouping(
+			new Token(TokenType.STAR, "*", null, 1),//operator for binary
+			new Expr.Grouping(//this is right for binary
 					new Expr.Literal(45.67)));
 		
 		System.out.println(new AstPrinter().print(expression));					
