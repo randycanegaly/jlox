@@ -3,6 +3,12 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 
 abstract class Expr {
+
+	//Declare an abstract method that takes Visitor type. All subclasses of baseName implement this method. 
+	abstract <R> R accept(Visitor<R> visitor);
+
+	/* 	The Visitor interface defines a set of methods, one for each type
+   		such that some action can be enabled across all types, minimizing in-type edits to implement the methods. */
 	interface Visitor<R> {//visit method prototypes for each type. Using generics.
 		R visitBinaryExpr(Binary expr);
 		R visitGroupingExpr(Grouping expr);
@@ -17,8 +23,6 @@ abstract class Expr {
 			this.operator = operator;
 			this.right = right;
 		}
-
-		//This class's implementation of the accept() abstract method.
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitBinaryExpr(this);
@@ -34,8 +38,6 @@ abstract class Expr {
 		Grouping(Expr expression) {
 			this.expression = expression;
 		}
-
-		//This class's implementation of the accept() abstract method.
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitGroupingExpr(this);
@@ -49,8 +51,6 @@ abstract class Expr {
 		Literal(Object value) {
 			this.value = value;
 		}
-
-		//This class's implementation of the accept() abstract method.
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitLiteralExpr(this);
@@ -65,8 +65,6 @@ abstract class Expr {
 			this.operator = operator;
 			this.right = right;
 		}
-
-		//This class's implementation of the accept() abstract method.
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitUnaryExpr(this);
@@ -75,6 +73,4 @@ abstract class Expr {
 		final Token operator;
 		final  Expr right;
 	}
-
-	abstract <R> R accept(Visitor<R> visitor);
 }

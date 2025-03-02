@@ -1,5 +1,42 @@
 package com.craftinginterpreters.lox;
 
+/* Defines an AST printing operation that applies across all subclass types of Expr
+ * Even if that operation needs to be different for every subclass, those differences are defined here.
+ * No print operation specific changes are needed in each subclass
+ * - As this implements Expr.Visitor, you see below that this had to implement a visitBinaryExpr() method.
+ * - visitBinaryExpr() defines for that one subclass the operation that will be done to it
+ * - Each Expr subclass defines an accept() method that takes an instance of this.
+ * - An Expr.Binary's accept(this) method is called
+ * - the implementation of accept() in the E.B instance thus has a reference to this
+ * - E.B, in its accept() implementation calls this's visitBinaryExpr() method, passing itself (E.B) back to this
+ * - this does whatever visitBinaryExpr() says to do to E.B.
+ * 
+ * * some operation on some type is defined in a doer class that implements Visitor
+ * * there is a method in that doer class describing the thing to be done to that some type
+ * * that some type implements an accept method that takes a Visitor type (the doer class)
+ * * when that some type's accept method is called, that some type has a reference to the Visitor/doer class
+ * * that some type's accept() method calls doer's corresponding some type method (Visitor methods are named after the some types), 
+ * 	   passing a reference to the some type
+ * * doer then has a reference to the some type instance and does the type appropriate operation on it.
+ * 
+ * In this case ....
+ * > AstPrinter implements Expr.Visitor
+ * > Expr.Visitor interface requires the visitBinaryExpr() method
+ * > visitBinaryExpr() can grab Expr.Binary data members and prints them out "pretty-printed"
+ * > Expr.Binary instance's accept method is called, passing in this AstPrinter (as a Visitor type)
+ * > E.B takes that reference to the Visitor and calls "its" method on it - visitBinaryExpr() passing a reference to itself back
+ * > AstPrinters' visitBinaryExpr method than does the printing thing with E.B's data.
+ * 
+ * "To E.B., here, accept this thing that will do something to you"
+ * "Reply to AstPrinter, sweet, do it to me, here is me back at you"
+ * "AstPrinter .. I have you, now I do the thing to you.
+ * All the information about the doer and the type-specific things to be done are in the doer class.
+ * No specifics about what will be done are in the E.Bs
+ * E.Bs just have an accept() method that takes a reference to the Visitor interface.
+ * Any number of doers, each doing different things can be defined, thus creating the ability to newly define many cross-type operations
+ * without touching those types. 
+ */
+
 public class AstPrinter implements Expr.Visitor<String> {
 	
 	String print(Expr expr) {
@@ -42,7 +79,9 @@ public class AstPrinter implements Expr.Visitor<String> {
 	
 	
 	/*
-	 * (* (- 123) (group 45.67))
+	 * Create an instance of an Expr.Binary AST
+	 * that looks like .... (* (- 123) (group 45.67))
+	 * Create an instance of this AstPrinter class and call its print method for the expression.
 	 */
 	
 	
