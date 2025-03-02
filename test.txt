@@ -1,9 +1,1 @@
 //comment
-/*comment*/
-/*comment
-*/
-*/
-/* This is a comment
-and so is this
-and this
-*/
