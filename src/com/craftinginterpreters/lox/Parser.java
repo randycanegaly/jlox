@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox;
 import java.util.List;
+import java.util.ArrayList;
+
 import static com.craftinginterpreters.lox.TokenType.*;//"static" here allows future usage without having to say TokenType.____
 
 public class Parser {
@@ -13,17 +15,47 @@ public class Parser {
 		this.tokens = tokens;
 	}
 	
-	Expr parse() {
-		try {
-			return expression();
-		} catch (ParseError error) {
-			return null;
+	//Scanner emits tokens
+	//Parser consumes a collection of tokens and emits syntax trees
+	//Grammar .. program -> statement* EOF ;
+	List<Stmt> parse() {
+		List<Stmt> statements = new ArrayList<>();//new instance of ArrayList<>, which implements List<>. Make the variable be of the 
+		//interface type for flexibility
+		while (!isAtEnd()) {//checks if current has run off the end of the list of tokens
+			statements.add(statement());//build syntax trees (bunch of statements)
 		}
+		
+		return statements;
 	}
 	
 	//below, a series of methods, each corresponding to a rule in the grammar ...
+	
 	private Expr expression() {
 		return equality();
+	}
+	
+	//Grammar .. statement -> exprStmt
+	//						| printStmt;
+	private Stmt statement() {
+		if (match(PRINT)) return printStatement();
+		
+		return expressionStatement();
+	}
+	
+	//Grammar .. printStmt -> "print" expression ";"
+	private Stmt printStatement() {
+		//already matched PRINT, so know we're in a print statement
+		//Just need to emit an abstract syntax tree for expression
+		Expr value = expression();
+		consume(SEMICOLON, "Expect ';' after value.");//check for ; and advance current
+		return new Stmt.Print(value);//the side-effect that makes printStatement a statement is to print out its value
+	}
+	
+	//Grammar .. exprStmt -> expression ";"
+	private Stmt expressionStatement() {
+		Expr expr = expression();
+		consume(SEMICOLON, "Expect ';' after expression.");
+		return new Stmt.Expression(expr);
 	}
 	
 	private Expr equality() {

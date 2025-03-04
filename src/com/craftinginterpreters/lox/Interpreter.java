@@ -1,21 +1,28 @@
 package com.craftinginterpreters.lox;
+import java.util.List;
 
 import com.craftinginterpreters.lox.Expr.Binary;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Unary;
+import com.craftinginterpreters.lox.Stmt.Expression;
+import com.craftinginterpreters.lox.Stmt.Print;
 
-public class Interpreter implements Expr.Visitor<Object>{//Object will be the type used to represent values generated
-	void interpret(Expr expression) {
+public class Interpreter implements Expr.Visitor<Object>,
+									Stmt.Visitor<Void> {
+	
+	void interpret (List<Stmt> statements) {
 		try {
-			Object value = evaluate(expression);
-			System.out.println(stringify(value));
+			for (Stmt statement : statements) {
+				execute(statement);//call each statement's accept() method, passing this (which is also a Stmt.Visitor type)
+				//statement has to accept a bolus of Stmt.Visitor methods
+				//statement then calls "its" Stmt.Visitor method, inflicting an operation on itself, like printing out a Stmt.Print's value
+			}
 		} catch (RuntimeError error) {
 			Lox.runtimeError(error);
 		}
 	}
-	
-	
+	 
 	@Override
 	public Object visitBinaryExpr(Binary expr) {//A Binary subclass instance of Expr will call this method to trigger the
 		//operation defined here for its type. Binary instance will get an reference to 'this' when its accept() method is called.
@@ -96,6 +103,19 @@ public class Interpreter implements Expr.Visitor<Object>{//Object will be the ty
 	
 		return null;
 	}
+
+	@Override
+	public Void visitExpressionStmt(Expression stmt) {
+		evaluate(stmt.expression);
+		return null;
+	}
+
+	@Override
+	public Void visitPrintStmt(Print stmt) {
+		Object value = evaluate(stmt.expression);
+		System.out.println(stringify(value));
+		return null;
+	}
 	
 	private void checkNumberOperand(Token operator, Object operand) {
 		if (operand instanceof Double) return;//operand is a good type
@@ -137,5 +157,9 @@ public class Interpreter implements Expr.Visitor<Object>{//Object will be the ty
 
 	private Object evaluate(Expr expr) {
 		return expr.accept(this);
+	}
+	
+	private void execute(Stmt stmt) {
+		stmt.accept(this);
 	}
 }
