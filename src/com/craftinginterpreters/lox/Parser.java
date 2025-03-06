@@ -84,35 +84,40 @@ public class Parser {
 	 * 
 	 * The trick is that right before we create the assignment expression node (line 108),
 	 * we look at the left-hand side expression and figure out what kind of assignment target it is.
-	 * We convert the r-value expression node into an l-value representation. 
-	 * 
+	 * 	"look at" means that calling expression() below will call all successively higher precedence
+	 * 	Ast generating methods (we are following the grammar) until we "match" something.
+	 * 	In this case we match at IDENTIFIER in primary() because the left-and thing is an IDENTIFIER
+	 * 	that intends to indicate/say "go find the storage location of this IDENTIFIER because we 
+	 * 	want to assign this new value to that identifier and store it there
+	 * 		primary(), for an identifier returns ... return new Expr.Variable(previous()), a Variable
+	 * 		WE FOUND AN IDENTIFER, KNOW WE ARE SUPPOSED TO BE ASSIGNING, AND NOW HAVE AHOLD OF A VARIABLE TYPE
+	 * We convert the r-value expression node into an l-value representation.
+	 * 	We just treated expr like an r-value thingy, we evaluated it. We did that to figure out what it
+	 * 	was and to confirm it was a thing we wanted to assign to and expr refers to a Variable Ast type
+	 * We have to cast expr to the Expr.Variable subclass and then create a Token with Variable name in expr 
+	 * That makes it now an l-value, we can assign to it --> create new Expr.Assign Ast
 	/*
 	expression -> assignment;
 	assignment -> IDENTIFIER "=" assignment
 				| equality ;
 	 */
 	private Expr assignment() {
-		Expr expr = equality();//the case where we didn't see '=' and so it is some other expression of higher precedence than assignment
-
-		/*
-		 * match() calls check(), which peek()s and checks for a matching type
-		 * peek() gets the current token
-		 * So ... get the current token, see if its type matches EQUAL
-		 */
+		Expr expr = equality();
+		/*the case where we didn't see '=' and so it is some other expression of higher precedence than assignment
+		* likely will be the Variable case of primary() where IDENTIFIER was seen
+		* so expr probably points to an Expr.Variable - see above
+		* 	match() calls check(), which peek()s and checks for a matching type
+		* 	peek() gets the current token
+		* 	So ... get the current token, see if its type matches EQUAL
+		*/
 		if (match(EQUAL)) { //see the EQUAL identifier, meaning we are in an assignment expression (assignment returns a value, so is an expression) 
 			Token equals = previous();//match() does an advance(), so we have to backup one
-			Expr value = assignment();//the thing we want assigned
+			Expr value = assignment();//the thing we want assigned, our r-value
 			
-			if (expr instanceof Expr.Variable) {//is it an Expr.Variable?
-				Token name = ((Expr.Variable)expr).name;//have to cast it because expr from above is an Expr base class type
-				return new Expr.Assign(name, value);
-				/*
-				* saw a '=', sat on the next token, 
-				* parsed it as an assignment and set that to value. 
-				* Then built an Assign Ast from those pieces and returned it
-				* These Parser methods dig through the Tokens collection and emit abstract syntax trees representing
-				* what the code is trying to describe
-				*/
+			if (expr instanceof Expr.Variable) {//is it an Expr.Variable? this check lets us know we want to assign to it --> see above comment block
+				Token name = ((Expr.Variable)expr).name;//have to cast it because expr from above is an Expr base class type. 
+				//line above converts to/creates an l-value that can be assigned to with a name
+				return new Expr.Assign(name, value);//make the assign of the r-value thing to the l-value thing
 			}
 			
 			error(equals, "Invalid assignment target.");
