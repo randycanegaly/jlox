@@ -17,12 +17,12 @@ public class Parser {
 	
 	//Scanner emits tokens
 	//Parser consumes a collection of tokens and emits syntax trees
-	//Grammar .. program -> statement* EOF ;
+	//Grammar .. program -> declaration* EOF ;
 	List<Stmt> parse() {
 		List<Stmt> statements = new ArrayList<>();//new instance of ArrayList<>, which implements List<>. Make the variable be of the 
 		//interface type for flexibility
 		while (!isAtEnd()) {//checks if current has run off the end of the list of tokens
-			statements.add(statement());//build syntax trees (bunch of statements)
+			statements.add(declaration());//build syntax trees (bunch of statements)
 		}
 		
 		return statements;
@@ -32,6 +32,16 @@ public class Parser {
 	
 	private Expr expression() {
 		return equality();
+	}
+	
+	private Stmt declaration() {
+		try {
+			if (match(VAR)) return varDeclaration();
+			return statement();
+		} catch (ParseError error) {
+			synchronize();
+			return null;
+		}
 	}
 	
 	//Grammar .. statement -> exprStmt
@@ -49,6 +59,18 @@ public class Parser {
 		Expr value = expression();
 		consume(SEMICOLON, "Expect ';' after value.");//check for ; and advance current
 		return new Stmt.Print(value);//the side-effect that makes printStatement a statement is to print out its value
+	}
+	
+	private Stmt varDeclaration() {
+		Token name = consume(IDENTIFIER, "Expect variable name.");
+		
+		Expr initializer = null;
+		if (match(EQUAL)) {
+			initializer = expression();
+		}
+		
+		consume(SEMICOLON, "Expect ';' after value.");//check for ; and advance current
+		return new Stmt.Var(name, initializer);
 	}
 	
 	//Grammar .. exprStmt -> expression ";"
@@ -122,6 +144,11 @@ public class Parser {
 		
 		if (match(NUMBER, STRING)) {
 			return new Expr.Literal(previous().literal);
+		}
+	
+		if (match(IDENTIFIER)) {
+			return new Expr.Variable(previous());
+			
 		}
 		
 		if (match(LEFT_PAREN)) {

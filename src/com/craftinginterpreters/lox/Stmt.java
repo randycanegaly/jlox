@@ -12,6 +12,7 @@ abstract class Stmt {
 	interface Visitor<R> {//visit method prototypes for each type. Using generics.
 		R visitExpressionStmt(Expression stmt);
 		R visitPrintStmt(Print stmt);
+		R visitVarStmt(Var stmt);
  	}
 
 	//Expression
@@ -38,5 +39,20 @@ abstract class Stmt {
 		}
 
 		final Expr expression;
+	}
+
+	//Var
+	static class Var extends Stmt {
+		Var(Token name, Expr intializer) {
+			this.name = name;
+			this.intializer = intializer;
+		}
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitVarStmt(this);
+		}
+
+		final Token name;
+		final  Expr intializer;
 	}
 }

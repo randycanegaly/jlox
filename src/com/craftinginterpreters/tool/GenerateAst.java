@@ -14,18 +14,20 @@ public class GenerateAst {
 		
 		String outputDir = args[0];
 		
-		//create the expression Ast class
+		//generate the expression Ast class
 		defineAst(outputDir, "Expr", Arrays.asList(
 				"Binary		: Expr left, Token operator, Expr right",
 				"Grouping	: Expr expression",
 				"Literal	: Object value",
-				"Unary		: Token operator, Expr right"
+				"Unary		: Token operator, Expr right",
+				"Variable	: Token name" //this an expression, it produces a value, when the name is seen, produce the corresponding value
 		));
 		
-		//create the statement Ast class
+		//generate the statement Ast class
 		defineAst(outputDir, "Stmt", Arrays.asList(
 				"Expression : Expr expression",
-				"Print 		: Expr expression"	
+				"Print 		: Expr expression",	
+				"Var		: Token name, Expr intializer" //this is a statement, it has a side effect - bind a value to a variable
 		));
 	
 	}

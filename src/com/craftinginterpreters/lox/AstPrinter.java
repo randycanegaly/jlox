@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox;
 
+import com.craftinginterpreters.lox.Expr.Variable;
+
 /* Defines an AST printing operation that applies across all subclass types of Expr
  * Even if that operation needs to be different for every subclass, those differences are defined here.
  * No print operation specific changes are needed in each subclass
@@ -95,5 +97,10 @@ public class AstPrinter implements Expr.Visitor<String> {
 					new Expr.Literal(45.67)));
 		
 		System.out.println(new AstPrinter().print(expression));					
+	}
+
+	@Override
+	public String visitVariableExpr(Variable expr) {
+		return parenthesize(expr.name.lexeme);
 	}
 }
