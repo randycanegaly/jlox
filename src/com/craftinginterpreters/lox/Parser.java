@@ -31,7 +31,7 @@ public class Parser {
 	//below, a series of methods, each corresponding to a rule in the grammar ...
 	
 	private Expr expression() {
-		return equality();
+		return assignment();
 	}
 	
 	private Stmt declaration() {
@@ -78,6 +78,47 @@ public class Parser {
 		Expr expr = expression();
 		consume(SEMICOLON, "Expect ';' after expression.");
 		return new Stmt.Expression(expr);
+	}
+	
+	/* CE page 125, "little trick" to compensate for only being able to look one token ahead ....
+	 * 
+	 * The trick is that right before we create the assignment expression node (line 108),
+	 * we look at the left-hand side expression and figure out what kind of assignment target it is.
+	 * We convert the r-value expression node into an l-value representation. 
+	 * 
+	/*
+	expression -> assignment;
+	assignment -> IDENTIFIER "=" assignment
+				| equality ;
+	 */
+	private Expr assignment() {
+		Expr expr = equality();//the case where we didn't see '=' and so it is some other expression of higher precedence than assignment
+
+		/*
+		 * match() calls check(), which peek()s and checks for a matching type
+		 * peek() gets the current token
+		 * So ... get the current token, see if its type matches EQUAL
+		 */
+		if (match(EQUAL)) { //see the EQUAL identifier, meaning we are in an assignment expression (assignment returns a value, so is an expression) 
+			Token equals = previous();//match() does an advance(), so we have to backup one
+			Expr value = assignment();//the thing we want assigned
+			
+			if (expr instanceof Expr.Variable) {//is it an Expr.Variable?
+				Token name = ((Expr.Variable)expr).name;//have to cast it because expr from above is an Expr base class type
+				return new Expr.Assign(name, value);
+				/*
+				* saw a '=', sat on the next token, 
+				* parsed it as an assignment and set that to value. 
+				* Then built an Assign Ast from those pieces and returned it
+				* These Parser methods dig through the Tokens collection and emit abstract syntax trees representing
+				* what the code is trying to describe
+				*/
+			}
+			
+			error(equals, "Invalid assignment target.");
+		}
+		
+		return expr;
 	}
 	
 	private Expr equality() {

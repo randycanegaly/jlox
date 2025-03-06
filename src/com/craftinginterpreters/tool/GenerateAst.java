@@ -16,6 +16,7 @@ public class GenerateAst {
 		
 		//generate the expression Ast class
 		defineAst(outputDir, "Expr", Arrays.asList(
+				"Assign		: Token name, Expr value",//generates a subclass named Assign with fields Token name and Expr value
 				"Binary		: Expr left, Token operator, Expr right",
 				"Grouping	: Expr expression",
 				"Literal	: Object value",

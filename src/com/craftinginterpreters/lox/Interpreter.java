@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox;
 import java.util.List;
 
+import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
@@ -12,6 +13,8 @@ import com.craftinginterpreters.lox.Stmt.Var;
 
 public class Interpreter implements Expr.Visitor<Object>,
 									Stmt.Visitor<Void> {
+
+	private Environment environment = new Environment();//private instance variable to hold all name/value bindings
 	
 	void interpret (List<Stmt> statements) {
 		try {
@@ -181,5 +184,11 @@ public class Interpreter implements Expr.Visitor<Object>,
 		return environment.get(expr.name);
 		
 	
+	}
+
+	@Override
+	public Object visitAssignExpr(Assign expr) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

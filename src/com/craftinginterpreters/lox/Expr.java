@@ -10,12 +10,28 @@ abstract class Expr {
 	/* 	The Visitor interface defines a set of methods, one for each type
    		such that some action can be enabled across all types, minimizing in-type edits to implement the methods. */
 	interface Visitor<R> {//visit method prototypes for each type. Using generics.
+		R visitAssignExpr(Assign expr);
 		R visitBinaryExpr(Binary expr);
 		R visitGroupingExpr(Grouping expr);
 		R visitLiteralExpr(Literal expr);
 		R visitUnaryExpr(Unary expr);
 		R visitVariableExpr(Variable expr);
  	}
+
+	//Assign
+	static class Assign extends Expr {
+		Assign(Token name, Expr value) {
+			this.name = name;
+			this.value = value;
+		}
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitAssignExpr(this);
+		}
+
+		final Token name;
+		final  Expr value;
+	}
 
 	//Binary
 	static class Binary extends Expr {

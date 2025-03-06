@@ -1,5 +1,6 @@
 package com.craftinginterpreters.lox;
 
+import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Variable;
 
 /* Defines an AST printing operation that applies across all subclass types of Expr
@@ -102,5 +103,11 @@ public class AstPrinter implements Expr.Visitor<String> {
 	@Override
 	public String visitVariableExpr(Variable expr) {
 		return parenthesize(expr.name.lexeme);
+	}
+
+	@Override
+	public String visitAssignExpr(Assign expr) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
