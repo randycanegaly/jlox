@@ -26,11 +26,11 @@ public class GenerateAst {
 		
 		//generate the statement Ast class
 		defineAst(outputDir, "Stmt", Arrays.asList(
+				"Block		: List<Stmt> statements",
 				"Expression : Expr expression",
 				"Print 		: Expr expression",	
-				"Var		: Token name, Expr intializer" //this is a statement, it has a side effect - bind a value to a variable
+				"Var		: Token name, Expr initializer" //this is a statement, it has a side effect - bind a value to a variable
 		));
-	
 	}
 	
 	private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException {

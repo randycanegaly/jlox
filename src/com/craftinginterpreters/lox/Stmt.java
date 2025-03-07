@@ -10,10 +10,24 @@ abstract class Stmt {
 	/* 	The Visitor interface defines a set of methods, one for each type
    		such that some action can be enabled across all types, minimizing in-type edits to implement the methods. */
 	interface Visitor<R> {//visit method prototypes for each type. Using generics.
+		R visitBlockStmt(Block stmt);
 		R visitExpressionStmt(Expression stmt);
 		R visitPrintStmt(Print stmt);
 		R visitVarStmt(Var stmt);
  	}
+
+	//Block
+	static class Block extends Stmt {
+		Block(List<Stmt> statements) {
+			this.statements = statements;
+		}
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitBlockStmt(this);
+		}
+
+		final List<Stmt> statements;
+	}
 
 	//Expression
 	static class Expression extends Stmt {
@@ -43,9 +57,9 @@ abstract class Stmt {
 
 	//Var
 	static class Var extends Stmt {
-		Var(Token name, Expr intializer) {
+		Var(Token name, Expr initializer) {
 			this.name = name;
-			this.intializer = intializer;
+			this.initializer = initializer;
 		}
 		@Override
 		<R> R accept(Visitor<R> visitor) {
@@ -53,6 +67,6 @@ abstract class Stmt {
 		}
 
 		final Token name;
-		final  Expr intializer;
+		final  Expr initializer;
 	}
 }
