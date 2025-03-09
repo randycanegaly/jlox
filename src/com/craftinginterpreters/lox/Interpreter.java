@@ -5,10 +5,12 @@ import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
+import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
 import com.craftinginterpreters.lox.Stmt.Expression;
+import com.craftinginterpreters.lox.Stmt.If;
 import com.craftinginterpreters.lox.Stmt.Print;
 import com.craftinginterpreters.lox.Stmt.Var;
 
@@ -167,6 +169,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 	
 	private void execute(Stmt stmt) {
 		stmt.accept(this);
+		/*
+		call the Ast object's accept() method, 
+		passing it a reference to this interpreter. 
+		Ast will call the appropriate visit* method here, passing a reference to itself 
+		so that the visit* method can inflict that method on the Ast object
+		*/
 	}
 
 	@Override
@@ -218,5 +226,33 @@ public class Interpreter implements Expr.Visitor<Object>,
 			this.environment = previous;//done executing the block contents, block exits, its scope disappears, 
 			//restore "current" environment to the one enclosing the block
 		}
+	}
+
+	@Override
+	public Void visitIfStmt(Stmt.If stmt) {
+		if(isTruthy(evaluate(stmt.condition))) {//condition is true
+			execute(stmt.thenBranch);//do then branch
+		} else if (stmt.elseBranch != null) {//condition is false and there is an else block
+			execute(stmt.elseBranch);//do else block
+		}
+
+		return null;
+	}
+
+	@Override
+	public Object visitLogicalExpr(Logical expr) {
+		Object left = evaluate(expr.left);
+		
+		if (expr.operator.type == TokenType.OR) {//it's an OR
+			//figure out if we can short cut
+			//if left is true, just return it
+			//if left is false, return whatever right is
+			if (isTruthy(left)) return left;//if not truthy, just fall to the bottom and return right
+		} else if (expr.operator.type == TokenType.AND) {//it's an AND
+			if (!isTruthy(left)) return left;//AND, and left is false, we know the AND is false. If left is true, fall to the bottom and return whatever right is
+		}
+		
+		return evaluate(expr.right);
+	
 	}
 }

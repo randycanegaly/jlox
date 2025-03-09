@@ -47,12 +47,27 @@ public class Parser {
 	//Grammar .. statement -> exprStmt
 	//						| printStmt;
 	private Stmt statement() {
+		if (match(IF)) return ifStatement();
 		if (match(PRINT)) return printStatement();
 		if (match(LEFT_BRACE)) return new Stmt.Block(block());
 		
 		return expressionStatement();
 	}
 	
+	private Stmt ifStatement() {
+		consume (LEFT_PAREN, "Expect '(' after 'if'.");
+		Expr condition = expression();
+		consume(RIGHT_PAREN, "Expect ')' after if condition.");
+		
+		Stmt thenBranch = statement();
+		Stmt elseBranch = null;
+		if (match(ELSE)) {
+			elseBranch = statement();
+		}
+		
+		return new Stmt.If(condition, thenBranch, elseBranch);
+	}
+
 	//Grammar .. printStmt -> "print" expression ";"
 	private Stmt printStatement() {
 		//already matched PRINT, so know we're in a print statement
@@ -98,7 +113,7 @@ public class Parser {
 	
 	/* CE page 125, "little trick" to compensate for only being able to look one token ahead ....
 	 * 
-	 * The trick is that right before we create the assignment expression node (line 108),
+	 * The trick is that right before we create the assignment expression node,
 	 * we look at the left-hand side expression and figure out what kind of assignment target it is.
 	 * 	"look at" means that calling expression() below will call all successively higher precedence
 	 * 	Ast generating methods (we are following the grammar) until we "match" something.
@@ -112,13 +127,17 @@ public class Parser {
 	 * 	was and to confirm it was a thing we wanted to assign to and expr refers to a Variable Ast type
 	 * We have to cast expr to the Expr.Variable subclass and then create a Token with Variable name in expr 
 	 * That makes it now an l-value, we can assign to it --> create new Expr.Assign Ast
+	
 	/*
-	expression -> assignment;
-	assignment -> IDENTIFIER "=" assignment
-				| equality ;
+	expression 	-> assignment;
+	assignment 	-> IDENTIFIER "=" assignment
+				| logic_or ; //Grammar goes top to bottom, lowest precedence at top. If don't see IDENTIFIER then it must be next highest precedence .. OR
+	logic_or	-> logic_and ( "or" logic_and )* ; //<something> or <something>. The <something> first could be a logic_and, but could also be any of the higher precedence grammar constructions. So anything or anything
+	logic_and	-> equality ( "and" equality )* ;//Same logic as above ... could be any higher precedence Ast	
 	 */
+
 	private Expr assignment() {
-		Expr expr = equality();
+		Expr expr = or();
 		/*the case where we didn't see '=' and so it is some other expression of higher precedence than assignment
 		* likely will be the Variable case of primary() where IDENTIFIER was seen
 		* so expr probably points to an Expr.Variable - see above
@@ -142,6 +161,31 @@ public class Parser {
 		return expr;
 	}
 	
+	private Expr or() {
+		Expr expr = and();
+		
+		while (match(OR)) {//can have a bunch or ORs in series, process them left to right
+			Token operator = previous();//match would have walked to next one
+			Expr right = and();
+			expr = new Expr.Logical(expr, operator, right);
+		}
+		
+		return expr;
+	}
+
+	private Expr and() {
+		Expr expr = equality();//start out assuming its just one, no following ANDed, create the 'left' Ast
+		
+		while (match(AND)) {//but I do see at least one AND, loop to see more if there's a series of them
+			Token operator = previous();
+			Expr right = equality();//create the 'right' Ast
+			expr = new Expr.Logical(expr, operator, expr);//'reset' the Expr to return to be one made up of the original 'left' above, operator and then the 'right'
+		}
+		
+		return expr;
+	
+	}
+
 	private Expr equality() {
 		Expr expr = comparison();
 		while (match(BANG_EQUAL, EQUAL_EQUAL)) {//import static from above at work here

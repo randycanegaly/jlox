@@ -20,14 +20,16 @@ public class GenerateAst {
 				"Binary		: Expr left, Token operator, Expr right",
 				"Grouping	: Expr expression",
 				"Literal	: Object value",
+				"Logical	: Expr left, Token operator, Expr right",
 				"Unary		: Token operator, Expr right",
 				"Variable	: Token name" //this an expression, it produces a value, when the name is seen, produce the corresponding value
 		));
 		
 		//generate the statement Ast class
 		defineAst(outputDir, "Stmt", Arrays.asList(
-				"Block		: List<Stmt> statements",
-				"Expression : Expr expression",
+				"Block		:	List<Stmt> statements",
+				"Expression :	Expr expression",
+				"If			:	Expr condition, Stmt thenBranch, Stmt elseBranch",
 				"Print 		: Expr expression",	
 				"Var		: Token name, Expr initializer" //this is a statement, it has a side effect - bind a value to a variable
 		));
