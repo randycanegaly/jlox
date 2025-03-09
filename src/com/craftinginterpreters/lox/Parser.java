@@ -57,10 +57,62 @@ public class Parser {
 		return expressionStatement();
 	}
 	
+	/**
+	 * Parse for a for loop but "desugar" and under the covers, build an equivalent while loop Ast
+	 * Every for loop can be re-written as a while loop. 
+	 * The for's initializer appears before the while statement
+	 * The for's condition is made the constructed while loop's condition
+	 * The for's incrementer is made the last line in the while loop's body
+	 * @return
+	 */
 	private Stmt forStatement() {
 		consume(LEFT_PAREN, "Expect '(' after 'for'.");
-		//TO DO: continue from here ..........
+		//create the initializer for the while that we are going to construct and substitute for the for loop
+		Stmt initializer;//referenced as the base class, because it could turn out to be empty, a variable declaration or an expression
+		if (match(SEMICOLON)) {
+			initializer = null;//saw a semicolon right away, the for's initializer is empty
+		} else if (match(VAR)) {
+			initializer = varDeclaration();//see a variable declaration so create the syntax tree node for one
+		} else {//see some expression
+			initializer = expressionStatement();
+		}//already walked past the initializer's ';' when match() above
+		
+		//create the condition for the while loop
+		//could be null
+		Expr condition = null;
+		if (!check(SEMICOLON)) {//check doesn't advance, it uses peek() to look at the token at current. If not ';', then the condition is not null, is an expression
+			condition = expression();
+		}
+		consume(SEMICOLON, "Expect ';' after loop condition.");
+		
+		//create the incrementer, could be null
+		Expr increment = null;
+		
+		if (!check(RIGHT_PAREN)) {//didn't see ')' next, so there must be an increment expression
+			increment = expression();
+		}
+		consume(RIGHT_PAREN, "Expect ')' after all three for loop clauses");
+		
+		//we now have the pieces to build the while loop syntax tree node that will replace the for loop
+		//build the substitute while loop using the pieces build above
+		Stmt body = statement();//a statement could be any number of Ast types, including a block
+		//Work backwards along the for loop statement and build a set of syntax tree nodes that emulate the functioning of the for loop
 	
+		if (increment != null) {
+			body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));//creates a block containing the current body with the incrementer as its last line
+		}
+		//now add the condition
+		if (condition == null) condition = new Expr.Literal(true);//no condition, while loop always runs, set condition to true
+		body = new Stmt.While(condition, body);//build while syntax tree node
+	
+		//now add the initializer
+		if (initializer != null) {
+			body = new Stmt.Block(Arrays.asList(initializer, body));//this creates a new, outer block with the initializer at its start, outside of the while loop
+		}
+		
+		return body;
+		
+		
 	}
 
 	private Stmt whileStatement() {

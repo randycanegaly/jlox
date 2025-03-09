@@ -33,7 +33,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 	 
 	@Override
-	public Object visitBinaryExpr(Binary expr) {//A Binary subclass instance of Expr will call this method to trigger the
+	public Object visitBinaryExpr(Expr.Binary expr) {//A Binary subclass instance of Expr will call this method to trigger the
 		//operation defined here for its type. Binary instance will get an reference to 'this' when its accept() method is called.
 		Object left = evaluate(expr.left);
 		Object right = evaluate(expr.right);
@@ -79,7 +79,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitGroupingExpr(Grouping expr) {
+	public Object visitGroupingExpr(Expr.Grouping expr) {
 		return evaluate(expr.expression);
 		//(expression) - need to evaluate the expression inside the parentheses - get a value
 		//so expression will be type of one of grouping, literal or unary
@@ -93,12 +93,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitLiteralExpr(Literal expr) {
+	public Object visitLiteralExpr(Expr.Literal expr) {
 		return expr.value;
 	}
 
 	@Override
-	public Object visitUnaryExpr(Unary expr) {
+	public Object visitUnaryExpr(Expr.Unary expr) {
 		Object right = evaluate(expr.right);
 		
 		switch (expr.operator.type) {
@@ -114,13 +114,13 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitExpressionStmt(Expression stmt) {
+	public Void visitExpressionStmt(Stmt.Expression stmt) {
 		evaluate(stmt.expression);
 		return null;
 	}
 
 	@Override
-	public Void visitPrintStmt(Print stmt) {
+	public Void visitPrintStmt(Stmt.Print stmt) {
 		Object value = evaluate(stmt.expression);
 		System.out.println(stringify(value));
 		return null;
@@ -139,8 +139,8 @@ public class Interpreter implements Expr.Visitor<Object>,
 	private boolean isTruthy(Object object) {
 		if (object == null) return false;
 		if (object instanceof Boolean) return (boolean)object;
+		
 		return true;
-	
 	}
 	
 	private boolean isEqual(Object a, Object b) {
@@ -179,7 +179,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitVarStmt(Var stmt) {
+	public Void visitVarStmt(Stmt.Var stmt) {
 		Object value = null;
 		if (stmt.initializer != null) {
 			value = evaluate(stmt.initializer);
@@ -190,14 +190,14 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitVariableExpr(Variable expr) {
+	public Object visitVariableExpr(Expr.Variable expr) {
 		return environment.get(expr.name);
 		
 	
 	}
 
 	@Override
-	public Object visitAssignExpr(Assign expr) {
+	public Object visitAssignExpr(Expr.Assign expr) {
 		Object value = evaluate(expr.value);
 		environment.assign(expr.name, value);
 		return value;
@@ -205,7 +205,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitBlockStmt(Block stmt) {
+	public Void visitBlockStmt(Stmt.Block stmt) {
 		executeBlock(stmt.statements, new Environment(environment));
 		return null;
 	}
@@ -241,7 +241,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitLogicalExpr(Logical expr) {
+	public Object visitLogicalExpr(Expr.Logical expr) {
 		Object left = evaluate(expr.left);
 		
 		if (expr.operator.type == TokenType.OR) {//it's an OR
@@ -258,8 +258,8 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitWhileStmt(While stmt) {
-		while(isTruthy(stmt.condition)) {//I get it. These methods are to actually evaluate/execute/create the value represented by the Ast
+	public Void visitWhileStmt(Stmt.While stmt) {
+		while(isTruthy(evaluate(stmt.condition))) {//I get it. These methods are to actually evaluate/execute/create the value represented by the Ast
 											//here, and elsewhere in these, we just substitute the Java for doing that ... a Java while loop
 			execute(stmt.body);
 		}
