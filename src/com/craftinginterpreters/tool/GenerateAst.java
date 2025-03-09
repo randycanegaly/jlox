@@ -30,8 +30,9 @@ public class GenerateAst {
 				"Block		:	List<Stmt> statements",
 				"Expression :	Expr expression",
 				"If			:	Expr condition, Stmt thenBranch, Stmt elseBranch",
-				"Print 		: Expr expression",	
-				"Var		: Token name, Expr initializer" //this is a statement, it has a side effect - bind a value to a variable
+				"While 		:	Expr condition, Stmt body",
+				"Print 		: 	Expr expression",	
+				"Var		: 	Token name, Expr initializer" //this is a statement, it has a side effect - bind a value to a variable
 		));
 	}
 	

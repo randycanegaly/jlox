@@ -1,4 +1,5 @@
 package com.craftinginterpreters.lox;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -47,13 +48,31 @@ public class Parser {
 	//Grammar .. statement -> exprStmt
 	//						| printStmt;
 	private Stmt statement() {
+		if (match(FOR)) return forStatement();
 		if (match(IF)) return ifStatement();
 		if (match(PRINT)) return printStatement();
+		if (match(WHILE)) return whileStatement();
 		if (match(LEFT_BRACE)) return new Stmt.Block(block());
 		
 		return expressionStatement();
 	}
 	
+	private Stmt forStatement() {
+		consume(LEFT_PAREN, "Expect '(' after 'for'.");
+		//TO DO: continue from here ..........
+	
+	}
+
+	private Stmt whileStatement() {
+		consume (LEFT_PAREN, "Expect '(' after 'while'.");
+		Expr condition = expression();
+		consume (RIGHT_PAREN, "Expect ')' after 'while'.");
+		Stmt body = statement();
+		
+		return new Stmt.While(condition, body);
+	
+	}
+
 	private Stmt ifStatement() {
 		consume (LEFT_PAREN, "Expect '(' after 'if'.");
 		Expr condition = expression();

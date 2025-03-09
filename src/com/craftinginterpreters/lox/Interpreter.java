@@ -13,6 +13,7 @@ import com.craftinginterpreters.lox.Stmt.Expression;
 import com.craftinginterpreters.lox.Stmt.If;
 import com.craftinginterpreters.lox.Stmt.Print;
 import com.craftinginterpreters.lox.Stmt.Var;
+import com.craftinginterpreters.lox.Stmt.While;
 
 public class Interpreter implements Expr.Visitor<Object>,
 									Stmt.Visitor<Void> {
@@ -254,5 +255,15 @@ public class Interpreter implements Expr.Visitor<Object>,
 		
 		return evaluate(expr.right);
 	
+	}
+
+	@Override
+	public Void visitWhileStmt(While stmt) {
+		while(isTruthy(stmt.condition)) {//I get it. These methods are to actually evaluate/execute/create the value represented by the Ast
+											//here, and elsewhere in these, we just substitute the Java for doing that ... a Java while loop
+			execute(stmt.body);
+		}
+		
+		return null;
 	}
 }
