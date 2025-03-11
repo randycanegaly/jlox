@@ -17,7 +17,6 @@ import com.craftinginterpreters.lox.Stmt.Print;
 import com.craftinginterpreters.lox.Stmt.Var;
 import com.craftinginterpreters.lox.Stmt.While;
 
-@SuppressWarnings("unused")
 public class Interpreter implements Expr.Visitor<Object>,
 									Stmt.Visitor<Void> {
 
@@ -54,7 +53,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 	 
 	@Override
-	public Object visitBinaryExpr(Expr.Binary expr) {//A Binary subclass instance of Expr will call this method to trigger the
+	public Object visitBinaryExpr(Binary expr) {//A Binary subclass instance of Expr will call this method to trigger the
 		//operation defined here for its type. Binary instance will get an reference to 'this' when its accept() method is called.
 		Object left = evaluate(expr.left);
 		Object right = evaluate(expr.right);
@@ -160,7 +159,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitGroupingExpr(Expr.Grouping expr) {
+	public Object visitGroupingExpr(Grouping expr) {
 		return evaluate(expr.expression);
 		//(expression) - need to evaluate the expression inside the parentheses - get a value
 		//so expression will be type of one of grouping, literal or unary
@@ -174,12 +173,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitLiteralExpr(Expr.Literal expr) {
+	public Object visitLiteralExpr(Literal expr) {
 		return expr.value;
 	}
 
 	@Override
-	public Object visitUnaryExpr(Expr.Unary expr) {
+	public Object visitUnaryExpr(Unary expr) {
 		Object right = evaluate(expr.right);
 		
 		switch (expr.operator.type) {
@@ -271,13 +270,13 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitExpressionStmt(Stmt.Expression stmt) {
+	public Void visitExpressionStmt(Expression stmt) {
 		evaluate(stmt.expression);
 		return null;
 	}
 
 	@Override
-	public Void visitPrintStmt(Stmt.Print stmt) {
+	public Void visitPrintStmt(Print stmt) {
 		Object value = evaluate(stmt.expression);
 		System.out.println(stringify(value));
 		return null;
@@ -336,7 +335,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitVarStmt(Stmt.Var stmt) {
+	public Void visitVarStmt(Var stmt) {
 		Object value = null;
 		if (stmt.initializer != null) {
 			value = evaluate(stmt.initializer);
@@ -347,14 +346,14 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitVariableExpr(Expr.Variable expr) {
+	public Object visitVariableExpr(Variable expr) {
 		return environment.get(expr.name);
 		
 	
 	}
 
 	@Override
-	public Object visitAssignExpr(Expr.Assign expr) {
+	public Object visitAssignExpr(Assign expr) {
 		Object value = evaluate(expr.value);
 		environment.assign(expr.name, value);
 		return value;
@@ -362,7 +361,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitBlockStmt(Stmt.Block stmt) {
+	public Void visitBlockStmt(Block stmt) {
 		executeBlock(stmt.statements, new Environment(environment));
 		return null;
 	}
@@ -387,7 +386,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitIfStmt(Stmt.If stmt) {
+	public Void visitIfStmt(If stmt) {
 		if(isTruthy(evaluate(stmt.condition))) {//condition is true
 			execute(stmt.thenBranch);//do then branch
 		} else if (stmt.elseBranch != null) {//condition is false and there is an else block
@@ -398,7 +397,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Object visitLogicalExpr(Expr.Logical expr) {
+	public Object visitLogicalExpr(Logical expr) {
 		Object left = evaluate(expr.left);
 		
 		if (expr.operator.type == TokenType.OR) {//it's an OR
@@ -415,7 +414,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 	}
 
 	@Override
-	public Void visitWhileStmt(Stmt.While stmt) {
+	public Void visitWhileStmt(While stmt) {
 		while(isTruthy(evaluate(stmt.condition))) {//I get it. These methods are to actually evaluate/execute/create the value represented by the Ast
 											//here, and elsewhere in these, we just substitute the Java for doing that ... a Java while loop
 			execute(stmt.body);
