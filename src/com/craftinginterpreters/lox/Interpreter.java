@@ -3,6 +3,7 @@ import java.util.List;
 
 import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
+import com.craftinginterpreters.lox.Expr.Call;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
@@ -264,6 +265,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 			execute(stmt.body);
 		}
 		
+		return null;
+	}
+
+	@Override
+	public Object visitCallExpr(Call expr) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

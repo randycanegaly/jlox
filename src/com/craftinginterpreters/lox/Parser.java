@@ -311,9 +311,46 @@ public class Parser {
 			return new Expr.Unary(operator, right);
 		}
 		
-		return primary();
+		return call();
 	}
 	
+	/**
+	 * Grammar .. call -> primary ( "(" arguments? ")" )*; 
+	 * Grammar calls for zero or more instances of '()' which could each have within them an optional list of arguments
+	 */
+	private Expr call() {
+		Expr expr = primary(); //parse the identifier for the thing to call
+		
+		while (true) {
+			if (match(LEFT_PAREN)) {//if '(' seen, then we are looking at something like .. primary ( list of arguments )( list of arguments )()
+				expr = finishCall(expr);// will process the ( list of arguments )( list of arguments )(), successive '(' denotes another '()' with an optional argument list
+			} else {
+				break;//didn't see the '(', so just a primary
+			}
+		}
+		
+		return expr;
+	
+	}
+
+	/**
+	 * Grammar .. arguments -> expression ( "," expression )* ;
+	 * @param callee - the thing being called, could be a function name or any other expression that returns a function object
+	 */
+	private Expr finishCall(Expr callee) {
+		List<Expr> arguments = new ArrayList<>();
+		if (!check(RIGHT_PAREN)) {//')' would mark the end of the optional, additional argument expressions
+			do {//do the body here at least once
+				arguments.add(expression());//seeing argument expressions, add each to the List
+			} while (match(COMMA));//seeing comments means there is another arguments expression
+		}
+		
+		Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");//above, broke out of while loop because saw no more arguments
+		
+		return new Expr.Call(callee, paren, arguments);//paren Token as added for later use in error reporting
+	
+	}
+
 	private Expr primary() {
 		if (match(FALSE)) return new Expr.Literal(false);
 		if (match(TRUE)) return new Expr.Literal(true);
