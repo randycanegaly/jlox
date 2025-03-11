@@ -1,4 +1,5 @@
 package com.craftinginterpreters.lox;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.craftinginterpreters.lox.Expr.Assign;
@@ -16,10 +17,29 @@ import com.craftinginterpreters.lox.Stmt.Print;
 import com.craftinginterpreters.lox.Stmt.Var;
 import com.craftinginterpreters.lox.Stmt.While;
 
+@SuppressWarnings("unused")
 public class Interpreter implements Expr.Visitor<Object>,
 									Stmt.Visitor<Void> {
 
-	private Environment environment = new Environment();//private instance variable to hold all name/value bindings
+	final Environment globals = new Environment();//the global environment
+	private Environment environment = globals;//the local environment, initially set to match the global environment
+	
+	Interpreter() {
+		globals.define("clock", new LoxCallable() {
+			@Override
+			public int arity() { return 0; }
+		
+			@Override public Object call(Interpreter interpreter,
+											List<Object> arguments) {
+				return (double)System.currentTimeMillis() / 1000.0;
+			}
+			
+			@Override
+			public String toString() { return "<native fn>"; }
+		});
+	}
+	
+	
 	
 	void interpret (List<Stmt> statements) {
 		try {
@@ -75,6 +95,66 @@ public class Interpreter implements Expr.Visitor<Object>,
 				return !isEqual(left, right);
 			case EQUAL_EQUAL:
 				return isEqual(left, right);
+		case AND:
+			break;
+		case BANG:
+			break;
+		case CLASS:
+			break;
+		case COMMA:
+			break;
+		case DOT:
+			break;
+		case ELSE:
+			break;
+		case EOF:
+			break;
+		case EQUAL:
+			break;
+		case FALSE:
+			break;
+		case FOR:
+			break;
+		case FUN:
+			break;
+		case IDENTIFIER:
+			break;
+		case IF:
+			break;
+		case LEFT_BRACE:
+			break;
+		case LEFT_PAREN:
+			break;
+		case NIL:
+			break;
+		case NUMBER:
+			break;
+		case OR:
+			break;
+		case PRINT:
+			break;
+		case RETURN:
+			break;
+		case RIGHT_BRACE:
+			break;
+		case RIGHT_PAREN:
+			break;
+		case SEMICOLON:
+			break;
+		case STRING:
+			break;
+		case SUPER:
+			break;
+		case THIS:
+			break;
+		case TRUE:
+			break;
+		case VAR:
+			break;
+		case WHILE:
+			break;
+		default:
+			break;
 		}
 		return null;
 	}
@@ -108,6 +188,82 @@ public class Interpreter implements Expr.Visitor<Object>,
 		case MINUS:
 			checkNumberOperand(expr.operator, right);
 			return -(double) right;//we hit bottom, took Ast, tore it apart and calculated the actual value from all the pieces of it
+		case AND:
+			break;
+		case BANG_EQUAL:
+			break;
+		case CLASS:
+			break;
+		case COMMA:
+			break;
+		case DOT:
+			break;
+		case ELSE:
+			break;
+		case EOF:
+			break;
+		case EQUAL:
+			break;
+		case EQUAL_EQUAL:
+			break;
+		case FALSE:
+			break;
+		case FOR:
+			break;
+		case FUN:
+			break;
+		case GREATER:
+			break;
+		case GREATER_EQUAL:
+			break;
+		case IDENTIFIER:
+			break;
+		case IF:
+			break;
+		case LEFT_BRACE:
+			break;
+		case LEFT_PAREN:
+			break;
+		case LESS:
+			break;
+		case LESS_EQUAL:
+			break;
+		case NIL:
+			break;
+		case NUMBER:
+			break;
+		case OR:
+			break;
+		case PLUS:
+			break;
+		case PRINT:
+			break;
+		case RETURN:
+			break;
+		case RIGHT_BRACE:
+			break;
+		case RIGHT_PAREN:
+			break;
+		case SEMICOLON:
+			break;
+		case SLASH:
+			break;
+		case STAR:
+			break;
+		case STRING:
+			break;
+		case SUPER:
+			break;
+		case THIS:
+			break;
+		case TRUE:
+			break;
+		case VAR:
+			break;
+		case WHILE:
+			break;
+		default:
+			break;
 		
 		}
 	
@@ -270,7 +426,21 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 	@Override
 	public Object visitCallExpr(Call expr) {
-		// TODO Auto-generated method stub
-		return null;
+		Object callee = evaluate(expr.callee);//function name or another expression that evaluates to a function object
+		
+		List<Object> arguments = new ArrayList<>();//where to stuff the arguments we find
+		for (Expr argument : expr.arguments) {
+			arguments.add(evaluate(argument));//evaluate the argument and add it to the arguments list
+		}
+	
+		if (!(callee instanceof LoxCallable)) {
+			throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+		}
+		
+		LoxCallable function = (LoxCallable)callee;//cast the callee. LoxCallable has methods to assist with using functions in Lox. callee must implement LoxCallable.
+		if (arguments.size() != function.arity()) {
+			throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
+		}
+		return function.call(this, arguments);//The Java representation of any Lox object that can be called like a function will implement the LoxCallable interface.
 	}
 }

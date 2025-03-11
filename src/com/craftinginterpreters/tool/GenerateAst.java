@@ -56,12 +56,12 @@ public class GenerateAst {
 		defineVisitor(writer, baseName, types);
 		
 		//the AST classes
-		boolean showComment = true;
+		//boolean showComment = true;
 		for (String type : types) {
 			String className = type.split(":")[0].trim();//for each specific subclass descriptor string split on ':' and grab the leftmost thing = class name
 			String fields = type.split(":")[1].trim();//same, but get the righthand string = fields descriptor string
 			defineType(writer, baseName, className, fields);
-			showComment = false;
+			//showComment = false;
 		}
 		
 		writer.println("}");

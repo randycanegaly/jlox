@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import static com.craftinginterpreters.lox.TokenType.*;//"static" here allows future usage without having to say TokenType.____
 
 public class Parser {
-	private static class ParseError extends RuntimeException {}//empty inner class to just provide a specific exception
+	private static class ParseError extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+	}//inner class to just provide a specific exception
 	
 	private final List<Token> tokens;
 	private int current = 0;//marker for where we are in tokens list
@@ -250,7 +252,7 @@ public class Parser {
 		while (match(AND)) {//but I do see at least one AND, loop to see more if there's a series of them
 			Token operator = previous();
 			Expr right = equality();//create the 'right' Ast
-			expr = new Expr.Logical(expr, operator, expr);//'reset' the Expr to return to be one made up of the original 'left' above, operator and then the 'right'
+			expr = new Expr.Logical(expr, operator, right);//'reset' the Expr to return to be one made up of the original 'left' above, operator and then the 'right'
 		}
 		
 		return expr;
@@ -317,6 +319,7 @@ public class Parser {
 	/**
 	 * Grammar .. call -> primary ( "(" arguments? ")" )*; 
 	 * Grammar calls for zero or more instances of '()' which could each have within them an optional list of arguments
+	 * Notes: Binder | Interpreter tab | 3/11/25
 	 */
 	private Expr call() {
 		Expr expr = primary(); //parse the identifier for the thing to call
@@ -336,11 +339,15 @@ public class Parser {
 	/**
 	 * Grammar .. arguments -> expression ( "," expression )* ;
 	 * @param callee - the thing being called, could be a function name or any other expression that returns a function object
+	 * Notes: Binder | Interpreter tab | 3/11/25
 	 */
 	private Expr finishCall(Expr callee) {
 		List<Expr> arguments = new ArrayList<>();
 		if (!check(RIGHT_PAREN)) {//')' would mark the end of the optional, additional argument expressions
 			do {//do the body here at least once
+				if (arguments.size() >= 255) {
+					error(peek(), "Can't have more than 255 arguments.");
+				}
 				arguments.add(expression());//seeing argument expressions, add each to the List
 			} while (match(COMMA));//seeing comments means there is another arguments expression
 		}
@@ -432,6 +439,70 @@ public class Parser {
 			switch(peek().type) {
 			case CLASS: case FOR: case FUN: case IF: case PRINT: case RETURN: case VAR: case WHILE:
 				return;
+			case AND:
+				break;
+			case BANG:
+				break;
+			case BANG_EQUAL:
+				break;
+			case COMMA:
+				break;
+			case DOT:
+				break;
+			case ELSE:
+				break;
+			case EOF:
+				break;
+			case EQUAL:
+				break;
+			case EQUAL_EQUAL:
+				break;
+			case FALSE:
+				break;
+			case GREATER:
+				break;
+			case GREATER_EQUAL:
+				break;
+			case IDENTIFIER:
+				break;
+			case LEFT_BRACE:
+				break;
+			case LEFT_PAREN:
+				break;
+			case LESS:
+				break;
+			case LESS_EQUAL:
+				break;
+			case MINUS:
+				break;
+			case NIL:
+				break;
+			case NUMBER:
+				break;
+			case OR:
+				break;
+			case PLUS:
+				break;
+			case RIGHT_BRACE:
+				break;
+			case RIGHT_PAREN:
+				break;
+			case SEMICOLON:
+				break;
+			case SLASH:
+				break;
+			case STAR:
+				break;
+			case STRING:
+				break;
+			case SUPER:
+				break;
+			case THIS:
+				break;
+			case TRUE:
+				break;
+			default:
+				break;
 			}
 			
 			advance();
