@@ -39,6 +39,7 @@ public class Parser {
 	
 	private Stmt declaration() {
 		try {
+			if (match(FUN)) return function("function");//"function" is the type
 			if (match(VAR)) return varDeclaration();
 			return statement();
 		} catch (ParseError error) {
@@ -47,6 +48,7 @@ public class Parser {
 		}
 	}
 	
+
 	//Grammar .. statement -> exprStmt
 	//						| printStmt;
 	private Stmt statement() {
@@ -169,6 +171,35 @@ public class Parser {
 		return new Stmt.Expression(expr);
 	}
 	
+	/**
+	 * @param kind - "function" or "method", allows using this for class methods as well
+	 * @return Function syntax tree node
+	 * 
+	 * declaration 	->	funDecl | varDecl | statement
+	 * funDecl		->	"fun" function ;
+	 * function 	-> 	IDENTIFIER "(" parameters? ")" block ;
+	 */
+	private Stmt.Function function(String kind) {
+		Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+		consume(LEFT_PAREN, "Expect '(' after " + kind + " name. ");
+		List<Token> parameters = new ArrayList<>();
+		if (!check(RIGHT_PAREN)) {//didn't hit ')' yet, there must be parameters
+			do {//do this at least once, to get the first parameter
+				if (parameters.size() >= 255) {
+					error(peek(), "Can't have more than 255 parameters.");
+				}
+				
+				parameters.add(consume(IDENTIFIER, "Expect parameter name."));//expected parameter because didn't yet see ')'
+			} while (match(COMMA));//check for ',' after seeing parameter name, if see ',', then look for another parameter
+		}
+		
+		consume(RIGHT_PAREN, "Expect ')' after parameters.");
+		
+		consume(LEFT_BRACE, "Expect '{' before " + kind + "body.");//look for start of function body
+		List<Stmt> body = block();//Stmt because could be a list of many different Stmt subclasses
+		return new Stmt.Function(name, parameters, body);
+	}
+
 	/**
 	 * Create list of Asts for what's inside of a block 
 	 * @return

@@ -12,6 +12,7 @@ import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
 import com.craftinginterpreters.lox.Stmt.Expression;
+import com.craftinginterpreters.lox.Stmt.Function;
 import com.craftinginterpreters.lox.Stmt.If;
 import com.craftinginterpreters.lox.Stmt.Print;
 import com.craftinginterpreters.lox.Stmt.Var;
@@ -24,6 +25,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 	private Environment environment = globals;//the local environment, initially set to match the global environment
 	
 	Interpreter() {
+		/* bind a name to a LoxCallable object
+		 * implements the LoxCallable interface methods
+		 * call allows it to be called
+		 * clock.call(this, Collections.emptyList());
+		 * to get back the current epoch time in seconds
+		 */
 		globals.define("clock", new LoxCallable() {
 			@Override
 			public int arity() { return 0; }
@@ -441,5 +448,13 @@ public class Interpreter implements Expr.Visitor<Object>,
 			throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
 		}
 		return function.call(this, arguments);//The Java representation of any Lox object that can be called like a function will implement the LoxCallable interface.
+	}
+
+
+
+	@Override
+	public Void visitFunctionStmt(Function stmt) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
