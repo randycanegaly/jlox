@@ -454,7 +454,9 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 	@Override
 	public Void visitFunctionStmt(Function stmt) {
-		// TODO Auto-generated method stub
+		LoxFunction function = new LoxFunction(stmt);//we got a syntax tree node function instance, but that doesn't have the mechanics for calling it
+		//wrap it in a LoxFunction which has call(), etc.
+		environment.define(stmt.name.lexeme, function);//bind the function name to the function object in the local scope environment
 		return null;
 	}
 }

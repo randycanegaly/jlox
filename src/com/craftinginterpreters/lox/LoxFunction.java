@@ -36,5 +36,10 @@ public class LoxFunction implements LoxCallable{
 		return declaration.params.size();//when this function gets called, 
 		//it will be asked for its arity so the caller can check that it is providing a matching number of arguments
 	}
+	
+	@Override
+	public String toString() {
+		return "<fn " + declaration.name.lexeme + ">";
+	}
 
 }
