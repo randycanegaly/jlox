@@ -55,12 +55,14 @@ public class Parser {
 		if (match(FOR)) return forStatement();
 		if (match(IF)) return ifStatement();
 		if (match(PRINT)) return printStatement();
+		if (match(RETURN)) return returnStatement();
 		if (match(WHILE)) return whileStatement();
 		if (match(LEFT_BRACE)) return new Stmt.Block(block());
 		
 		return expressionStatement();
 	}
 	
+
 	/**
 	 * Parse for a for loop but "desugar" and under the covers, build an equivalent while loop Ast
 	 * Every for loop can be re-written as a while loop. 
@@ -150,6 +152,19 @@ public class Parser {
 		Expr value = expression();
 		consume(SEMICOLON, "Expect ';' after value.");//check for ; and advance current
 		return new Stmt.Print(value);//the side-effect that makes printStatement a statement is to print out its value
+	}
+	
+	private Stmt returnStatement() {
+		Token keyword = previous();///the caller of this had matched on RETURN. 
+		//match() advances so we are one past the RETURN token
+		//so looking back one to grab the RETURN keyword token is appropriate
+		Expr value = null;
+		if (!check(SEMICOLON)) {//check gets the current token and returns whether it matches the one passed in - SEMICOLON
+			value = expression();//don't see SEMICOLON so there must be a return value
+		}
+		
+		consume(SEMICOLON, "Expect ';' after return value.");
+		return new Stmt.Return(keyword, value);
 	}
 	
 	private Stmt varDeclaration() {

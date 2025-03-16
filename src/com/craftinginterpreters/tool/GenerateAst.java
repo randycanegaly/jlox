@@ -34,6 +34,7 @@ public class GenerateAst {
 				"If			:	Expr condition, Stmt thenBranch, Stmt elseBranch",
 				"While 		:	Expr condition, Stmt body",
 				"Print 		: 	Expr expression",	
+				"Return		: 	Token keyword, Expr value",
 				"Var		: 	Token name, Expr initializer" //this is a statement, it has a side effect - bind a value to a variable
 		));
 	}

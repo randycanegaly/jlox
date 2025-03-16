@@ -10,25 +10,33 @@ import java.util.List;
  */
 public class LoxFunction implements LoxCallable{
 	private final Stmt.Function declaration;
+	private final Environment closure;//put any data known at the time this function is declared. "close" around that data
 	
 	
 	/**
 	 * Constructor
 	 * @param declaration - the Stmt.Function to wrap
 	 */
-	LoxFunction(Stmt.Function declaration) {
+	LoxFunction(Stmt.Function declaration, Environment closure) {
+		this.closure = closure;
 		this.declaration = declaration;
 	}
 	
 	@Override
 	public Object call(Interpreter interpreter, List<Object> arguments) {
-		Environment environment = new Environment(interpreter.globals);//function has its own environment - for local variable binding etc.
+		Environment environment = new Environment(closure);
+		//create an environment for the function call, passing the closure environment to be the parent environment
+		//this way, the function object has access to any data declared at the time it is defined
 		for (int i = 0; i < declaration.params.size(); i++) {
 			environment.define(declaration.params.get(i).lexeme, arguments.get(i));//bind arguments to parameter names
 		}
 		
-		interpreter.executeBlock(declaration.body, environment);//passing the environment for this function allows execution of the block within that scope
-		return null;
+		try {
+			interpreter.executeBlock(declaration.body, environment);//passing the environment for this function allows execution of the block within that scope
+		} catch (ReturnException returnValue) {//not really an Exception, just a way to wind back to here, the caller upon function return
+			return returnValue.value;//if the block was a function body and had a return statement we catch the Expception's value and return it
+		}
+		return null;//if we got to here then the function never did a return statement so we just return null (nil)
 	}
 
 	@Override

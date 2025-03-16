@@ -15,6 +15,7 @@ import com.craftinginterpreters.lox.Stmt.Expression;
 import com.craftinginterpreters.lox.Stmt.Function;
 import com.craftinginterpreters.lox.Stmt.If;
 import com.craftinginterpreters.lox.Stmt.Print;
+import com.craftinginterpreters.lox.Stmt.Return;
 import com.craftinginterpreters.lox.Stmt.Var;
 import com.craftinginterpreters.lox.Stmt.While;
 
@@ -454,9 +455,20 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 	@Override
 	public Void visitFunctionStmt(Function stmt) {
-		LoxFunction function = new LoxFunction(stmt);//we got a syntax tree node function instance, but that doesn't have the mechanics for calling it
+		LoxFunction function = new LoxFunction(stmt, environment);
+		//give the function the current environment - the one that is active when the function is declared - the closure
+		//we got a syntax tree node function instance, but that doesn't have the mechanics for calling it
 		//wrap it in a LoxFunction which has call(), etc.
 		environment.define(stmt.name.lexeme, function);//bind the function name to the function object in the local scope environment
 		return null;
+	}
+
+	@Override
+	public Void visitReturnStmt(Return stmt) {
+		Object value = null;
+		if (stmt.value != null) value = evaluate(stmt.value);
+		
+		throw new ReturnException(value);//return means leave the current scope and hand execution back to the caller
+		//so use the Java Exception mechanism to bubble up to where the function was called
 	}
 }
