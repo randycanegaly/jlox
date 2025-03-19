@@ -24,7 +24,7 @@ import com.craftinginterpreters.lox.Stmt.While;
 
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	private final Interpreter interpreter;
-	private final Stack<Map<String, Boolean>> scopes;//A Stack. Each element is a map of String/Boolean key/value pairs
+	private final Stack<Map<String, Boolean>> scopes = new Stack<>();//A Stack. Each element is a map of String/Boolean key/value pairs
 	
 	Resolver(Interpreter interpreter) {
 		this.interpreter = interpreter;
@@ -181,7 +181,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 			Lox.error(expr.name, "Can't read local variable in its own initializer.");
 		}
 		
-		resolveLocal(expr.name);
+		resolveLocal(expr, expr.name);
 		return null;
 	}
 }
