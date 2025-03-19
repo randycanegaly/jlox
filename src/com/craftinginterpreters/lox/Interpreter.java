@@ -1,6 +1,8 @@
 package com.craftinginterpreters.lox;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
@@ -24,6 +26,8 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 	final Environment globals = new Environment();//the global environment
 	private Environment environment = globals;//the local environment, initially set to match the global environment
+	private final Map<Expr, Integer> locals = new HashMap<>();//a map of expressions and integer key/pairs. The integer is the depth 
+	//in the environment chain where the definition of the variable can be found
 	
 	Interpreter() {
 		/* bind a name to a LoxCallable object
@@ -341,6 +345,17 @@ public class Interpreter implements Expr.Visitor<Object>,
 		so that the visit* method can inflict that method on the Ast object
 		*/
 	}
+	
+	/**
+	 * is passed an Expr subclass object and depth
+	 * puts the syntax tree node in the locals map along with the distance between where it is used and where it is defined
+	 * depth is the distance along the environment chain 
+	 * @param expr
+	 * @param depth
+	 */
+	void resolve(Expr expr, int depth) {
+		locals.put(expr, depth);
+	}
 
 	@Override
 	public Void visitVarStmt(Var stmt) {
@@ -353,19 +368,37 @@ public class Interpreter implements Expr.Visitor<Object>,
 		return null;
 	}
 
+	/**
+	 * Method to get the value for a variable
+	 * When a variable expression is seen, go get its value
+	 */
 	@Override
 	public Object visitVariableExpr(Variable expr) {
-		return environment.get(expr.name);
-		
-	
+		return lookUpVariable(expr.name, expr);
+	}
+
+	private Object lookUpVariable(Token name, Variable expr) {
+		Integer distance = locals.get(expr);
+		if (distance != null) {
+			return environment.getAt(distance, name.lexeme);//go to the environment at distance, where we determined the variable is defined
+			//get the value of the variable there
+		} else {
+			return globals.get(name);//not in the map, so the variable is a global
+		}
 	}
 
 	@Override
 	public Object visitAssignExpr(Assign expr) {
 		Object value = evaluate(expr.value);
-		environment.assign(expr.name, value);
+		
+		Integer distance = locals.get(expr);
+		if (distance != null) {
+			environment.assignAt(distance, expr.name, value);
+		} else {
+			globals.assign(expr.name, value);//otherwise put the name/value pair in the global environment
+		}
+		
 		return value;
-	
 	}
 
 	@Override

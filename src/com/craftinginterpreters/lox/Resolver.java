@@ -58,6 +58,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		expr.accept(this);
 	}
 	
+	private void resolveFunction(Function function) {
+		beginScope();//create a new inner scope for the function
+		for (Token param : function.params) {//declare and define each param in the function's inner scope
+			declare(param);
+			define(param);
+		}
+		
+		resolve(function.body);
+		endScope();
+	}
+	
 	private void beginScope() {
 		scopes.push(new HashMap<String, Boolean>());
 	}
@@ -78,6 +89,15 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		scopes.peek().put(name.lexeme, true);
 	}
 	
+	/**
+	 * resolves a variable usage/access
+	 * walks down the stack of scopes until it finds where the variable is defined
+	 * tells the interpreter of the variable resolution and passes the depth
+	 * at which the variable definition can be found so that interpreter
+	 * can retrieve the correct definition for the variable
+	 * @param expr
+	 * @param name
+	 */
 	private void resolveLocal(Expr expr, Token name) {
 		for (int i = scopes.size() - 1; i >= 0; i--) {
 			if (scopes.get(i).containsKey(name.lexeme)) {
@@ -89,37 +109,45 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	
 	@Override
 	public Void visitExpressionStmt(Expression stmt) {
-		// TODO Auto-generated method stub
+		resolve(stmt.expression);
 		return null;
 	}
 
 	@Override
 	public Void visitFunctionStmt(Function stmt) {
-		// TODO Auto-generated method stub
+		declare(stmt.name);//bind the name of the function in the surrounding scope
+		define(stmt.name);//set the boolean for the function name variable to true to indicate we got beyond just declaring it
+		resolveFunction(stmt);
 		return null;
 	}
 
 	@Override
 	public Void visitIfStmt(If stmt) {
-		// TODO Auto-generated method stub
+		resolve(stmt.condition);
+		resolve(stmt.thenBranch);
+		if (stmt.elseBranch != null) resolve(stmt.elseBranch); 
 		return null;
 	}
 
 	@Override
 	public Void visitWhileStmt(While stmt) {
-		// TODO Auto-generated method stub
+		resolve(stmt.condition);
+		resolve(stmt.body);
 		return null;
 	}
 
 	@Override
 	public Void visitPrintStmt(Print stmt) {
-		// TODO Auto-generated method stub
+		resolve(stmt.expression);
 		return null;
 	}
 
 	@Override
 	public Void visitReturnStmt(Return stmt) {
-		// TODO Auto-generated method stub
+		if (stmt.value != null) {
+			resolve(stmt.value);
+		}
+		
 		return null;
 	}
 
@@ -135,43 +163,50 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitAssignExpr(Assign expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.value);//resolve the value being assigned
+		resolveLocal(expr, expr.name);//resolve the variable being assigned to
 		return null;
 	}
 
 	@Override
 	public Void visitBinaryExpr(Binary expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.left);
+		resolve(expr.right);
 		return null;
 	}
 
 	@Override
 	public Void visitCallExpr(Call expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.callee);
+		
+		for (Expr argument : expr.arguments) {
+			resolve(argument);
+		}
+		
 		return null;
 	}
 
 	@Override
 	public Void visitGroupingExpr(Grouping expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.expression);
 		return null;
 	}
 
 	@Override
 	public Void visitLiteralExpr(Literal expr) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitLogicalExpr(Logical expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.left);
+		resolve(expr.right);
 		return null;
 	}
 
 	@Override
 	public Void visitUnaryExpr(Unary expr) {
-		// TODO Auto-generated method stub
+		resolve(expr.right);
 		return null;
 	}
 
