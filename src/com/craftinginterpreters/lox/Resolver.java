@@ -25,12 +25,20 @@ import com.craftinginterpreters.lox.Stmt.While;
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	private final Interpreter interpreter;
 	private final Stack<Map<String, Boolean>> scopes = new Stack<>();//A Stack. Each element is a map of String/Boolean key/value pairs
+	private FunctionType currentFunction = FunctionType.NONE;//default value for whether we are currently in a function or not
 	
 	Resolver(Interpreter interpreter) {
 		this.interpreter = interpreter;
 	}
 
-	private void resolve(List<Stmt> statements) {
+	private enum FunctionType {
+		NONE,
+		FUNCTION
+	}
+	
+	
+	
+	void resolve(List<Stmt> statements) {
 		for (Stmt statement : statements) {
 			resolve(statement);
 		}
@@ -58,7 +66,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		expr.accept(this);
 	}
 	
-	private void resolveFunction(Function function) {
+	private void resolveFunction(Function function, FunctionType type) {
+		FunctionType enclosingFunction = currentFunction;//remember the current function type
+		currentFunction = type; 
+		
 		beginScope();//create a new inner scope for the function
 		for (Token param : function.params) {//declare and define each param in the function's inner scope
 			declare(param);
@@ -67,6 +78,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		
 		resolve(function.body);
 		endScope();
+		currentFunction = enclosingFunction;//set the function type back to what it was before
 	}
 	
 	private void beginScope() {
@@ -81,6 +93,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		if (scopes.isEmpty()) return;
 		
 		Map<String, Boolean> scope = scopes.peek();
+		if (scope.containsKey(name.lexeme)) {
+			Lox.error(name, "Already a variable with this name in this scope.");
+		}
+		
 		scope.put(name.lexeme, false);
 	}
 	
@@ -117,7 +133,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	public Void visitFunctionStmt(Function stmt) {
 		declare(stmt.name);//bind the name of the function in the surrounding scope
 		define(stmt.name);//set the boolean for the function name variable to true to indicate we got beyond just declaring it
-		resolveFunction(stmt);
+	
+		resolveFunction(stmt, FunctionType.FUNCTION);//pass that we are in a function
 		return null;
 	}
 
@@ -144,6 +161,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitReturnStmt(Return stmt) {
+		//am I trying to use a return statement outside of a function?
+		if (currentFunction == FunctionType.NONE) {
+			Lox.error(stmt.keyword, "Can't return from top-level code");
+		}
+		
+		
+		
 		if (stmt.value != null) {
 			resolve(stmt.value);
 		}
