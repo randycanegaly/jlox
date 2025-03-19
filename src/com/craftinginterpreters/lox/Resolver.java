@@ -54,12 +54,37 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		stmt.accept(this);//accept() calls here, the appropriate visit*Stmt() for that Stmt subclass
 	}
 
+	private void resolve(Expr expr) {
+		expr.accept(this);
+	}
+	
 	private void beginScope() {
 		scopes.push(new HashMap<String, Boolean>());
 	}
 
 	private void endScope() {
 		scopes.pop();
+	}
+	
+	private void declare(Token name) {
+		if (scopes.isEmpty()) return;
+		
+		Map<String, Boolean> scope = scopes.peek();
+		scope.put(name.lexeme, false);
+	}
+	
+	private void define(Token name) {
+		if (scopes.isEmpty()) return;
+		scopes.peek().put(name.lexeme, true);
+	}
+	
+	private void resolveLocal(Expr expr, Token name) {
+		for (int i = scopes.size() - 1; i >= 0; i--) {
+			if (scopes.get(i).containsKey(name.lexeme)) {
+				interpreter.resolve(expr, scopes.size() - 1 - i);
+				return;
+			}
+		}
 	}
 	
 	@Override
@@ -100,7 +125,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitVarStmt(Var stmt) {
-		// TODO Auto-generated method stub
+		declare(stmt.name);
+		if (stmt.initializer != null) {
+			resolve(stmt.initializer);
+		}
+		define(stmt.name);
 		return null;
 	}
 
@@ -148,7 +177,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitVariableExpr(Variable expr) {
-	
-	
+		if(!scopes.isEmpty() && scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {//the variable hasn't been defined yet - false
+			Lox.error(expr.name, "Can't read local variable in its own initializer.");
+		}
+		
+		resolveLocal(expr.name);
+		return null;
 	}
 }
