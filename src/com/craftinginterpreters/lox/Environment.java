@@ -72,7 +72,7 @@ public class Environment {
 			environment = environment.enclosing;//walk up the environment chain distance jumps and return that environment
 		}
 		
-		return enclosing;
+		return environment;
 	}
 	
 	

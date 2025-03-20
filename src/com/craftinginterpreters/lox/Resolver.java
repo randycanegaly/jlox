@@ -36,8 +36,6 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		FUNCTION
 	}
 	
-	
-	
 	void resolve(List<Stmt> statements) {
 		for (Stmt statement : statements) {
 			resolve(statement);
