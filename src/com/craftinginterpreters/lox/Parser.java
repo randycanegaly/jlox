@@ -39,6 +39,7 @@ public class Parser {
 	
 	private Stmt declaration() {
 		try {
+			if (match(CLASS)) return classDeclaration();
 			if (match(FUN)) return function("function");//"function" is the type
 			if (match(VAR)) return varDeclaration();
 			return statement();
@@ -48,6 +49,20 @@ public class Parser {
 		}
 	}
 	
+
+	private Stmt classDeclaration() {
+		Token name = consume(IDENTIFIER, "Expect class name.");
+		consume(LEFT_BRACE, "Expect '{' before class body.");
+		
+		List<Stmt.Function> methods = new ArrayList<>();
+		while (!check(RIGHT_BRACE) && !isAtEnd()) {
+			methods.add(function("method"));//look for a function, tag it as a method and add it to the collection
+		}
+		
+		consume(RIGHT_PAREN, "Expected '}' after class body");//class holds behavior, class body is a list of the class's methods
+		
+		return new Stmt.Class(name, methods);
+	}
 
 	//Grammar .. statement -> exprStmt
 	//						| printStmt;

@@ -14,6 +14,7 @@ import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
+import com.craftinginterpreters.lox.Stmt.Class;
 import com.craftinginterpreters.lox.Stmt.Expression;
 import com.craftinginterpreters.lox.Stmt.Function;
 import com.craftinginterpreters.lox.Stmt.If;
@@ -88,19 +89,22 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	}
 	
 	private void declare(Token name) {
-		if (scopes.isEmpty()) return;
+		if (scopes.isEmpty()) return;//scopes is the Stack of scopes - a stack of string/boolean maps
 		
-		Map<String, Boolean> scope = scopes.peek();
+		Map<String, Boolean> scope = scopes.peek();//peek() returns the element at the top of the stack without removing it
+		//we have been resolving merrily along creating scopes and adding them to scopes, we should be "at" or "in" ???? the last one created
 		if (scope.containsKey(name.lexeme)) {
-			Lox.error(name, "Already a variable with this name in this scope.");
+			Lox.error(name, "Already a variable with this name in this scope.");// can't redeclare a variable already in a scope
 		}
 		
-		scope.put(name.lexeme, false);
+		scope.put(name.lexeme, false);//know here that there are some scopes and that we are "in" one and that the variable
+		//that we want to put in that scope is not already there
+		//put the string for this variable in the scope and mark it as not yet defined.
 	}
 	
 	private void define(Token name) {
 		if (scopes.isEmpty()) return;
-		scopes.peek().put(name.lexeme, true);
+		scopes.peek().put(name.lexeme, true);//find the variable name in the scope and mark it as having been defined
 	}
 	
 	/**
@@ -239,6 +243,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		}
 		
 		resolveLocal(expr, expr.name);
+		return null;
+	}
+
+	/**
+	 * inflict the resolve operation upon the Class instance passed in
+	 * grab its name and do the resolve stuff with it
+	 */
+	@Override
+	public Void visitClassStmt(Class stmt) {
+		declare(stmt.name);
+		define(stmt.name);
 		return null;
 	}
 }

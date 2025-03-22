@@ -13,6 +13,7 @@ import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
+import com.craftinginterpreters.lox.Stmt.Class;
 import com.craftinginterpreters.lox.Stmt.Expression;
 import com.craftinginterpreters.lox.Stmt.Function;
 import com.craftinginterpreters.lox.Stmt.If;
@@ -503,5 +504,13 @@ public class Interpreter implements Expr.Visitor<Object>,
 		
 		throw new ReturnException(value);//return means leave the current scope and hand execution back to the caller
 		//so use the Java Exception mechanism to bubble up to where the function was called
+	}
+
+
+
+	@Override
+	public Void visitClassStmt(Class stmt) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

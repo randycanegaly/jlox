@@ -11,6 +11,7 @@ abstract class Stmt {
    		such that some action can be enabled across all types, minimizing in-type edits to implement the methods. */
 	interface Visitor<R> {//visit method prototypes for each type. Using generics.
 		R visitBlockStmt(Block stmt);
+		R visitClassStmt(Class stmt);
 		R visitExpressionStmt(Expression stmt);
 		R visitFunctionStmt(Function stmt);
 		R visitIfStmt(If stmt);
@@ -31,6 +32,21 @@ abstract class Stmt {
 		}
 
 		final List<Stmt> statements;
+	}
+
+	//Class
+	static class Class extends Stmt {
+		Class(Token name, List<Stmt.Function> methods) {
+			this.name = name;
+			this.methods = methods;
+		}
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitClassStmt(this);
+		}
+
+		final Token name;
+		final  List<Stmt.Function> methods;
 	}
 
 	//Expression
