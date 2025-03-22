@@ -508,9 +508,17 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 
 
+	/**
+	 *interpreting means converting a syntax tree node (an AST) into its runtime representation
+	 *the runtime representation of a Lox language class is a Java LoxClass class. So make one.
+	 *two-stage process, declare the name, bound to nothing then go back and bind the LoxClass instance to the name
+	 *this allows for referencing the class inside its own methods
+	 */
 	@Override
 	public Void visitClassStmt(Class stmt) {
-		// TODO Auto-generated method stub
+		environment.define(stmt.name.lexeme, null);//in the environment, bind the class name to null
+		LoxClass klass = new LoxClass(stmt.name.lexeme);
+		environment.assign(stmt.name, klass);//"re-bind" the name to the new LoxClass instance
 		return null;
 	}
 }

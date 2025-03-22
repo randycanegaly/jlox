@@ -38,12 +38,12 @@ public class Environment {
 	}
 	
 	/**
-	 * puts a new name/object key/value pair in the values Map. It "remembers" it.
+	 * binds a new value to an existing name in the environment
 	 * @param name, a Token. Token is passed in, but the actual key in values is token.lexeme string
 	 * @param value, the object that is being bound to the name
 	 */
 	void assign(Token name, Object value) {
-		if (values.containsKey(name.lexeme) ) {
+		if (values.containsKey(name.lexeme) ) {//if it's there bind the new object to the name
 			values.put(name.lexeme, value);
 			return;
 		}
