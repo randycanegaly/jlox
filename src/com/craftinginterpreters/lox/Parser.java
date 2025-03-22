@@ -59,7 +59,7 @@ public class Parser {
 			methods.add(function("method"));//look for a function, tag it as a method and add it to the collection
 		}
 		
-		consume(RIGHT_PAREN, "Expected '}' after class body");//class holds behavior, class body is a list of the class's methods
+		consume(RIGHT_BRACE, "Expected '}' after class body");//class holds behavior, class body is a list of the class's methods
 		
 		return new Stmt.Class(name, methods);
 	}
