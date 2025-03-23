@@ -7,9 +7,11 @@ import java.util.Map;
 import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
 import com.craftinginterpreters.lox.Expr.Call;
+import com.craftinginterpreters.lox.Expr.Get;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
+import com.craftinginterpreters.lox.Expr.Set;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
@@ -485,8 +487,6 @@ public class Interpreter implements Expr.Visitor<Object>,
 		return function.call(this, arguments);//The Java representation of any Lox object that can be called like a function will implement the LoxCallable interface.
 	}
 
-
-
 	@Override
 	public Void visitFunctionStmt(Function stmt) {
 		LoxFunction function = new LoxFunction(stmt, environment);
@@ -506,8 +506,6 @@ public class Interpreter implements Expr.Visitor<Object>,
 		//so use the Java Exception mechanism to bubble up to where the function was called
 	}
 
-
-
 	/**
 	 *interpreting means converting a syntax tree node (an AST) into its runtime representation
 	 *the runtime representation of a Lox language class is a Java LoxClass class. So make one.
@@ -520,5 +518,31 @@ public class Interpreter implements Expr.Visitor<Object>,
 		LoxClass klass = new LoxClass(stmt.name.lexeme);
 		environment.assign(stmt.name, klass);//"re-bind" the name to the new LoxClass instance
 		return null;
+	}
+
+	/**
+	 *interpreting means converting a syntax tree node (an AST) into its runtime representation
+	 */
+	@Override
+	public Object visitGetExpr(Get expr) {
+		Object object = evaluate(expr.object);
+		if (object instanceof LoxInstance) {
+			return ((LoxInstance) object).get(expr.name);//got back Object type from evaluate, cast it to LoxInstance since it is one
+		}
+		
+		throw new RuntimeError(expr.name, "Only instances have properties.");
+	}
+
+	@Override
+	public Object visitSetExpr(Set expr) {
+		Object object = evaluate(expr.object);//the thing being set
+		
+		if (!(object instanceof LoxInstance)) {
+			throw new RuntimeError(expr.name, "Only instances have fields.");
+		}
+		
+		Object value = evaluate(expr.value);
+		((LoxInstance)object).set(expr.name, value);
+		return value;
 	}
 }

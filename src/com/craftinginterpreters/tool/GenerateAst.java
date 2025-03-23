@@ -19,9 +19,11 @@ public class GenerateAst {
 				"Assign		: Token name, Expr value",//generates a subclass named Assign with fields Token name and Expr value
 				"Binary		: Expr left, Token operator, Expr right",
 				"Call		: Expr callee, Token paren, List<Expr> arguments",
+				"Get 		: Expr object, Token name",
 				"Grouping	: Expr expression",
 				"Literal	: Object value",
 				"Logical	: Expr left, Token operator, Expr right",
+				"Set		: Expr object, Token name, Expr value",
 				"Unary		: Token operator, Expr right",
 				"Variable	: Token name" //this an expression, it produces a value, when the name is seen, produce the corresponding value
 		));

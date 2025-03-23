@@ -8,9 +8,11 @@ import java.util.Stack;
 import com.craftinginterpreters.lox.Expr.Assign;
 import com.craftinginterpreters.lox.Expr.Binary;
 import com.craftinginterpreters.lox.Expr.Call;
+import com.craftinginterpreters.lox.Expr.Get;
 import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
+import com.craftinginterpreters.lox.Expr.Set;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
@@ -254,6 +256,19 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	public Void visitClassStmt(Class stmt) {
 		declare(stmt.name);
 		define(stmt.name);
+		return null;
+	}
+
+	@Override
+	public Void visitGetExpr(Get expr) {
+		resolve(expr.object);
+		return null;
+	}
+
+	@Override
+	public Void visitSetExpr(Set expr) {
+		resolve(expr.value);//the value we want to set the property to
+		resolve(expr.object);//the thing being set
 		return null;
 	}
 }
