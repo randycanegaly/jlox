@@ -31,6 +31,17 @@ public class Lox {
 		if (hadRuntimeError) System.exit(70);
 	}
 
+/*
+ * TO DO: FIX -->> If I type at the REPL ....
+ * class Bacon {
+ * 	eat() {
+ * 		print "Crunch crunch crunch!";
+ * 	}
+ * }
+ * 
+ * Bacon().eat();
+ * it don't work. Can't handle the newline before it sees the closing '}' for the Bacon class
+ */
 	private static void runPrompt() throws IOException {
 		InputStreamReader input = new InputStreamReader(System.in);
 		BufferedReader reader = new BufferedReader(input);

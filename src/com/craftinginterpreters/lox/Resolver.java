@@ -13,6 +13,7 @@ import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Set;
+import com.craftinginterpreters.lox.Expr.This;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
@@ -36,6 +37,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	private enum FunctionType {
 		NONE,
+		METHOD,
 		FUNCTION
 	}
 	
@@ -251,11 +253,23 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	/**
 	 * inflict the resolve operation upon the Class instance passed in
 	 * grab its name and do the resolve stuff with it
+	 * and resolve the class' methods
 	 */
 	@Override
 	public Void visitClassStmt(Class stmt) {
 		declare(stmt.name);
 		define(stmt.name);
+		
+		beginScope();//create a new scope in the stack
+		scopes.peek().put("this", true);//put "this" in the scope marked true for defined
+		
+		for (Stmt.Function method : stmt.methods) {
+			FunctionType declaration = FunctionType.METHOD;
+			resolveFunction(method, declaration);//resolve each Stmt.Function, method in the class' list, passing it's type as METHOD
+		}
+		
+		endScope();
+		
 		return null;
 	}
 
@@ -269,6 +283,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	public Void visitSetExpr(Set expr) {
 		resolve(expr.value);//the value we want to set the property to
 		resolve(expr.object);//the thing being set
+		return null;
+	}
+
+	@Override
+	public Void visitThisExpr(This expr) {
+		resolveLocal(expr, expr.keyword);
 		return null;
 	}
 }

@@ -12,6 +12,7 @@ import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Set;
+import com.craftinginterpreters.lox.Expr.This;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
 import com.craftinginterpreters.lox.Stmt.Block;
@@ -52,8 +53,6 @@ public class Interpreter implements Expr.Visitor<Object>,
 			public String toString() { return "<native fn>"; }
 		});
 	}
-	
-	
 	
 	void interpret (List<Stmt> statements) {
 		try {
@@ -380,7 +379,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 		return lookUpVariable(expr.name, expr);
 	}
 
-	private Object lookUpVariable(Token name, Variable expr) {
+	private Object lookUpVariable(Token name, Expr expr) {
 		Integer distance = locals.get(expr);
 		if (distance != null) {
 			return environment.getAt(distance, name.lexeme);//go to the environment at distance, where we determined the variable is defined
@@ -511,12 +510,21 @@ public class Interpreter implements Expr.Visitor<Object>,
 	 *the runtime representation of a Lox language class is a Java LoxClass class. So make one.
 	 *two-stage process, declare the name, bound to nothing then go back and bind the LoxClass instance to the name
 	 *this allows for referencing the class inside its own methods
+	 *the runtime representation of each Stmt.Class's method, Stmt.Function, is the Java LoxFunction class
 	 */
 	@Override
 	public Void visitClassStmt(Class stmt) {
 		environment.define(stmt.name.lexeme, null);//in the environment, bind the class name to null
-		LoxClass klass = new LoxClass(stmt.name.lexeme);
+		
+		Map<String, LoxFunction> methods = new HashMap<>();
+		for (Stmt.Function method : stmt.methods ) {
+			LoxFunction function = new LoxFunction(method, environment);//class methods get the environment we're in when this is called, its closure 
+			methods.put(method.name.lexeme, function);
+		}
+		
+		LoxClass klass = new LoxClass(stmt.name.lexeme, methods);//put the runtime representations of the Stmt.Class's methods into the LoxClass instance
 		environment.assign(stmt.name, klass);//"re-bind" the name to the new LoxClass instance
+		
 		return null;
 	}
 
@@ -544,5 +552,12 @@ public class Interpreter implements Expr.Visitor<Object>,
 		Object value = evaluate(expr.value);
 		((LoxInstance)object).set(expr.name, value);
 		return value;
+	}
+
+
+
+	@Override
+	public Object visitThisExpr(This expr) {
+		return lookUpVariable(expr.keyword, expr);
 	}
 }

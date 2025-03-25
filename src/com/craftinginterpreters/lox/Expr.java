@@ -17,6 +17,7 @@ abstract class Expr {
 		R visitGroupingExpr(Grouping expr);
 		R visitLiteralExpr(Literal expr);
 		R visitLogicalExpr(Logical expr);
+		R visitThisExpr(This expr);
 		R visitSetExpr(Set expr);
 		R visitUnaryExpr(Unary expr);
 		R visitVariableExpr(Variable expr);
@@ -127,6 +128,19 @@ abstract class Expr {
 		final Expr left;
 		final  Token operator;
 		final  Expr right;
+	}
+
+	//This
+	static class This extends Expr {
+		This(Token keyword) {
+			this.keyword = keyword;
+		}
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitThisExpr(this);
+		}
+
+		final Token keyword;
 	}
 
 	//Set

@@ -5,6 +5,7 @@ import com.craftinginterpreters.lox.Expr.Call;
 import com.craftinginterpreters.lox.Expr.Get;
 import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Set;
+import com.craftinginterpreters.lox.Expr.This;
 import com.craftinginterpreters.lox.Expr.Variable;
 
 /* Defines an AST printing operation that applies across all subclass types of Expr
@@ -135,6 +136,12 @@ public class AstPrinter implements Expr.Visitor<String> {
 
 	@Override
 	public String visitSetExpr(Set expr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String visitThisExpr(This expr) {
 		// TODO Auto-generated method stub
 		return null;
 	}
