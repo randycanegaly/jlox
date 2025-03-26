@@ -488,7 +488,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 
 	@Override
 	public Void visitFunctionStmt(Function stmt) {
-		LoxFunction function = new LoxFunction(stmt, environment);
+		LoxFunction function = new LoxFunction(stmt, environment, false);//false = not in an initializer
 		//give the function the current environment - the one that is active when the function is declared - the closure
 		//we got a syntax tree node function instance, but that doesn't have the mechanics for calling it
 		//wrap it in a LoxFunction which has call(), etc.
@@ -518,7 +518,7 @@ public class Interpreter implements Expr.Visitor<Object>,
 		
 		Map<String, LoxFunction> methods = new HashMap<>();
 		for (Stmt.Function method : stmt.methods ) {
-			LoxFunction function = new LoxFunction(method, environment);//class methods get the environment we're in when this is called, its closure 
+			LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));//class methods get the environment we're in when this is called, its closure 
 			methods.put(method.name.lexeme, function);
 		}
 		

@@ -37,9 +37,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	private enum FunctionType {
 		NONE,
-		METHOD,
-		FUNCTION
+		FUNCTION,
+		INITIALIZER,
+		METHOD
 	}
+	
+	private enum ClassType {
+		NONE,
+		CLASS
+	}
+	
+	private ClassType currentClass = ClassType.NONE;
 	
 	void resolve(List<Stmt> statements) {
 		for (Stmt statement : statements) {
@@ -172,9 +180,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 			Lox.error(stmt.keyword, "Can't return from top-level code");
 		}
 		
-		
-		
-		if (stmt.value != null) {
+		if (stmt.value != null) {//we're using 'return' along with a value
+			if (currentFunction == FunctionType.INITIALIZER) {
+				Lox.error(stmt.keyword, "Can't return a value from an initializer.");
+			}
+			
 			resolve(stmt.value);
 		}
 		
@@ -257,6 +267,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	 */
 	@Override
 	public Void visitClassStmt(Class stmt) {
+		ClassType enclosingClass = currentClass;//remember what class type we had before we start doing things below
+		currentClass = ClassType.CLASS;//we know we are now in a class
+		
 		declare(stmt.name);
 		define(stmt.name);
 		
@@ -265,11 +278,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		
 		for (Stmt.Function method : stmt.methods) {
 			FunctionType declaration = FunctionType.METHOD;
+			if (method.name.lexeme.equals("init")) {//this method we see in the methods collection is an initializer
+				declaration = FunctionType.INITIALIZER;
+			}
+			
 			resolveFunction(method, declaration);//resolve each Stmt.Function, method in the class' list, passing it's type as METHOD
 		}
 		
 		endScope();
 		
+		currentClass = enclosingClass;//we're done, set the class type back to what it was before
 		return null;
 	}
 
@@ -288,6 +306,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitThisExpr(This expr) {
+		if (currentClass == ClassType.NONE) {
+			Lox.error(expr.keyword, "Can't use this outside of a class.");
+		}
+		
 		resolveLocal(expr, expr.keyword);
 		return null;
 	}

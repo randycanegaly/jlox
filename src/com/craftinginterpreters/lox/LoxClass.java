@@ -36,11 +36,23 @@ public class LoxClass implements LoxCallable {
 	@Override
 	public Object call(Interpreter interpreter, List<Object> arguments) {
 		LoxInstance instance = new LoxInstance(this);//instance has a reference to the class because the class holds behavior, instance holds state
+		LoxFunction initializer = findMethod("init");//create a runtime function object for the init() method
+		if (initializer != null) {
+			//bind creates a new environment that binds "this" to the LoxInstance
+			//it then passes that environment as closure to a new LoxFunction and returns it
+			//so that LoxFunction's environment chain as one environment where "this" is bound
+			//we then call that function (init) passing the arguments from the call to the Class() method
+			//thus arguments to Bagel() get passed to Bagel's init to do the the init things
+			initializer.bind(instance).call(interpreter, arguments);
+		}
+		
 		return instance;
 	}
 
 	@Override
 	public int arity() {
-		return 0;
+		LoxFunction initializer = findMethod("init");
+		if (initializer == null) return 0;//no initializer, no arguments
+		return initializer.arity();//return init's number of arguments
 	}
 }
