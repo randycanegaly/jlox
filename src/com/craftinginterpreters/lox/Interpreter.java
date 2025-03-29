@@ -12,6 +12,7 @@ import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Set;
+import com.craftinginterpreters.lox.Expr.Super;
 import com.craftinginterpreters.lox.Expr.This;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
@@ -514,15 +515,37 @@ public class Interpreter implements Expr.Visitor<Object>,
 	 */
 	@Override
 	public Void visitClassStmt(Class stmt) {
+		Object superclass = null;
+		if (stmt.superclass != null) {
+			superclass = evaluate(stmt.superclass);
+			if (!(superclass instanceof LoxClass)) {
+				throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+			}
+		}
+		
 		environment.define(stmt.name.lexeme, null);//in the environment, bind the class name to null
+		
+		if (stmt.superclass != null) {
+			environment = new Environment(environment);//make a new child environment with the old current environment as its parent, 
+			//this is now the environment we work with
+			environment.define("super", superclass);//bind "super" to the subclass in that environment
+		}
 		
 		Map<String, LoxFunction> methods = new HashMap<>();
 		for (Stmt.Function method : stmt.methods ) {
-			LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));//class methods get the environment we're in when this is called, its closure 
+			LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));//class methods get the environment from above with
+			//"super" bound to the superclass, as their closure
 			methods.put(method.name.lexeme, function);
 		}
 		
-		LoxClass klass = new LoxClass(stmt.name.lexeme, methods);//put the runtime representations of the Stmt.Class's methods into the LoxClass instance
+		LoxClass klass = new LoxClass(stmt.name.lexeme, (LoxClass)superclass, methods);//put the runtime representations of the Stmt.Class's methods into the LoxClass instance
+		
+		if (superclass != null) {
+			environment = environment.enclosing;//set the environment back to the one that was in use before we created a child environment
+			//and bound "super" to the superclass as that new child environment with "super" bound was used as closures for the LoxFunctions of the class methods
+			//we don't need it anymore.
+		}
+		
 		environment.assign(stmt.name, klass);//"re-bind" the name to the new LoxClass instance
 		
 		return null;
@@ -559,5 +582,36 @@ public class Interpreter implements Expr.Visitor<Object>,
 	@Override
 	public Object visitThisExpr(This expr) {
 		return lookUpVariable(expr.keyword, expr);
+	}
+
+	/**
+	 * @param Expr.Super that has the "super" keyword and a method name, the super.method we want
+	 * @return LoxFunction of the method on super that we want. It has a closure that has a bind for 'this'
+	 *We see a super expression. It has the keyword "super" and the name of the method.
+	 *We go to the locals HashMap and giving that expression, get back the depth from the current environment to where "super" is bound,
+	 *"super" was bound in the environment where the class definition that used the superclass was seen
+	 *We get the object bound to "super" in that distant environment and cast it to a LoxClass
+	 *We need to create a LoxInstance representing 'this'
+	 *'this' will be found just inside the environment that binds "super", so we do the distance-1 calculation to get that object and cast it to a LoxInstance
+	 *We find the method, a LoxFunction, by name, that we want on the LoxClass superclass
+	 *bind() on that LoxFunction creates a new environment, a closure for the LoxFunction and in that closure 
+	 */
+	@Override
+	public Object visitSuperExpr(Super expr) {
+		int distance = locals.get(expr);//expr is the key in the locals Hashmap, get returns the value, which is the depth.
+		//depth is the environments distance between where the variable is used and where it is defined
+		LoxClass superclass = (LoxClass)environment.getAt(distance, "super");//gets the environment distance jumps up the chain and gets the object for the "super" key
+		
+		//We know distance is the number of environment hops from the super expression to where the superclass is bound to "super" in some environment
+		//The environment where 'this' is bound is the one inside of where the superclass is bound to "super", so distance-1
+		LoxInstance object = (LoxInstance)environment.getAt(distance - 1, "this");//kind of a hack
+	
+		LoxFunction method = superclass.findMethod(expr.method.lexeme);
+		
+		if (method == null) {
+			throw new RuntimeError(expr.method, "Undefined property '" + expr.method.lexeme + "'.");
+		}
+		
+		return method.bind(object);
 	}
 }

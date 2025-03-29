@@ -13,6 +13,7 @@ import com.craftinginterpreters.lox.Expr.Grouping;
 import com.craftinginterpreters.lox.Expr.Literal;
 import com.craftinginterpreters.lox.Expr.Logical;
 import com.craftinginterpreters.lox.Expr.Set;
+import com.craftinginterpreters.lox.Expr.Super;
 import com.craftinginterpreters.lox.Expr.This;
 import com.craftinginterpreters.lox.Expr.Unary;
 import com.craftinginterpreters.lox.Expr.Variable;
@@ -44,7 +45,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	
 	private enum ClassType {
 		NONE,
-		CLASS
+		CLASS,
+		SUBCLASS
 	}
 	
 	private ClassType currentClass = ClassType.NONE;
@@ -272,6 +274,20 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		
 		declare(stmt.name);
 		define(stmt.name);
+		if (stmt.superclass != null && stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+			Lox.error(stmt.superclass.name, "A class can't inherit from itself.");
+		}
+		
+		if (stmt.superclass != null) {
+			currentClass = ClassType.SUBCLASS;
+			resolve(stmt.superclass);
+		}
+		
+		if (stmt.superclass != null) {//there is a super class
+			beginScope();//push a new Map onto the Stack of String/Boolean Maps
+			scopes.peek().put("super", true);//peek() gets the Map at the top of the Stack without removing it
+			//in that Map add the "super"/true pair
+		}
 		
 		beginScope();//create a new scope in the stack
 		scopes.peek().put("this", true);//put "this" in the scope marked true for defined
@@ -287,6 +303,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		
 		endScope();
 		
+		if (stmt.superclass != null) endScope();
+		
 		currentClass = enclosingClass;//we're done, set the class type back to what it was before
 		return null;
 	}
@@ -301,6 +319,18 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	public Void visitSetExpr(Set expr) {
 		resolve(expr.value);//the value we want to set the property to
 		resolve(expr.object);//the thing being set
+		return null;
+	}
+	
+	@Override
+	public Void visitSuperExpr(Super expr) {
+		if (currentClass == ClassType.NONE) {
+			Lox.error(expr.keyword, "Can't use 'super' outside of a class.");
+		} else if (currentClass != ClassType.SUBCLASS) {
+			Lox.error(expr.keyword, "Can't use 'super' in class with no superclass");
+		}
+		
+		resolveLocal(expr, expr.keyword);
 		return null;
 	}
 
